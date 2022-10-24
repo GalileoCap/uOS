@@ -1,0 +1,12 @@
+*.o
+*.a
+*.bin
+./kernel/include/defines.mac
+
+*.iso
+*.img
+
+*.log
+*.map
+*.dump
+compiler/*
