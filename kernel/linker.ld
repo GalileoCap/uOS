@@ -9,26 +9,26 @@ SECTIONS {
 
   . = 1M;
 
-  .boot : {
+  .multiboot : {
     *(.multiboot)
   }
 
   .btext : ALIGN(4K) {
-    *boot.o(.text)
+    *boot_asm.o(.text)
   }
 
   .brodata : ALIGN(4K) {
-    *boot.o(.rodata)
+    *boot_asm.o(.rodata)
   }
 
 
   .bdata : ALIGN(4K) {
-    *boot.o(.data)
+    *boot_asm.o(.data)
   }
 
   .bbss : ALIGN(4K) {
-    *boot.o(COMMON)
-    *boot.o(.bss)
+    *boot_asm.o(COMMON)
+    *boot_asm.o(.bss)
   }
 
   . += LDSTART;
