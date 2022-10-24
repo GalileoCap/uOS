@@ -14,11 +14,11 @@ CFLAGS += -I./include -I$(LIBSD)/libc/include
 ASMFLAGS += -i ./include
 
 LDFLAGS += -static -nostdlib
-LDFLAGS += -L$(BUILDD)/libk.a
+#LDFLAGS += -L$(BUILDD)/libk.a
 LDFLAGS += -T./linker.ld
 
 all: $(OBJS)
-	$(LD) $(LDFLAGS) -o $(BIN) $(OBJS)
+	$(LD) $(LDFLAGS) -o $(BIN) $(OBJS) $(BUILDD)/libk.a
 	grub-file --is-x86-multiboot $(BIN)
 	objdump -S --disassemble $(BIN) > $(DUMP)
 

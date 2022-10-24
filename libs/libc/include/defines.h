@@ -30,6 +30,8 @@ typedef u64 vaddr_t;
  * S: Macros
  */
 
+#define ALWAYS_INLINE inline __attribute((always_inline))
+
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
@@ -42,7 +44,7 @@ typedef u64 vaddr_t;
 #define ALIGN_UP(addr, align) (((addr) + (align)-1) & ~((align)-1))
 #define ALIGN_DOWN(addr, align) ((addr) & ~((align)-1))
 
-#define NULL ((void*)0)
+#define FLAGS_SET(x, y) (((x) & (y)) == (y))
 
 #define U8_MAX ((u8)255)
 #define S8_MAX ((s8)127)

@@ -11,12 +11,12 @@ CFLAGS += -I./include -I$(LIBS)/libc/include
 ASMFLAGS += -i ./include
 
 libc: CFLAGS += -pie -fPIE -fPIC -DUSER
-libc: $(COBJS)
-	$(AR) rcs $(BUILDD)/libc.a $+
+libc: $(OBJS)
+	$(AR) -rcs $(BUILDD)/libc.a $+
 
 libk: CFLAGS += -DKERNEL -ffreestanding -static -I$(KERNELD)/include
-libk: $(COBJS)
-	$(AR) rcs $(BUILDD)/libk.a $+
+libk: $(OBJS)
+	$(AR) -rcs $(BUILDD)/libk.a $+
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
