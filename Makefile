@@ -47,7 +47,7 @@ default: help
 .PHONY: bochs libc libk kernel apps iso help clean
 
 bochs: all
-	#TODO: Check disk exists
+	#TODO: Make sure disk exists
 	cd $(BUILDD) && bochs -q
 
 all: compiler libc libk kernel apps iso
@@ -70,6 +70,7 @@ iso:
 	@printf "[ISO] Done\n"
 
 disk:
+	rm -f $(DISK) $(DISK).lock
 	dd if=/dev/zero of=$(DISK) bs=1048576 count=$(DISKSZ)
 	mkfs.ext2 -Onone -LGALIDRIVE $(DISK)
 	@printf "[DISK] Done\n"
@@ -88,7 +89,7 @@ help:
 
 clean:
 	@printf "[CLEAN] Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
-	rm -f $(DISK) $(DISK).lock
+	#rm -f $(DISK) $(DISK).lock
 	rm -f $(ISO) $(MAP) $(DUMP)
 	find $(BUILDD) $(KERNELD) $(APPD) $(LIBSD) \( -name "*.o" -or -name "*.a" -or -name "*.elf" -or -name "*.bin" \) -type f -delete 
 	@printf "\n[CLEAN] Cleaning\n"

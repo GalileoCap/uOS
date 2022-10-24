@@ -9,7 +9,7 @@ OBJS := $(CSRC:.c=.o) $(ASMSRC:.asm=_asm.o)
 
 CFLAGS += -ffreestanding -static -DKERNEL
 CFLAGS += -ekmain
-CFLAGS += -I./include -I$(LIBS)/libc/include
+CFLAGS += -I./include -I$(LIBSD)/libc/include
 
 ASMFLAGS += -i ./include
 

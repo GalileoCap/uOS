@@ -3,13 +3,13 @@
 ## General roadmap
 
 - [ ] Basic
-  - [ ] Boot
-    - [ ] Long mode
-    - [ ] Higher-half
+  - [X] Boot
+    - [X] Long mode
   - [ ] Serial output
   - [ ] Interrupts
     - [ ] Catch exceptions
   - [ ] Memory
+    - [ ] Higher-half
     - [ ] Kernel heap
     - [ ] Page manager
     - [ ] Manage page faults
