@@ -91,5 +91,5 @@ clean:
 	@printf "[CLEAN] Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	#rm -f $(DISK) $(DISK).lock
 	rm -f $(ISO) $(MAP) $(DUMP)
-	find $(BUILDD) $(KERNELD) $(APPD) $(LIBSD) \( -name "*.o" -or -name "*.a" -or -name "*.elf" -or -name "*.bin" \) -type f -delete 
+	find $(BUILDD) $(KERNELD) $(APPD) $(LIBSD) \( -name "*.o" -or -name "*.a" -or -name "*.elf" -or -name "*.bin" -or -name "*.log" \) -type f -delete
 	@printf "\n[CLEAN] Cleaning\n"

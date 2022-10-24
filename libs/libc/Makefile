@@ -11,15 +11,18 @@ CFLAGS += -I./include -I$(LIBS)/libc/include
 ASMFLAGS += -i ./include
 
 libc: CFLAGS += -pie -fPIE -fPIC -DUSER
-libc: $(OBJS)
-	$(AR) -rcs $(BUILDD)/libc.a $+
+libc: clean $(OBJS)
+	$(AR) -rcs $(BUILDD)/libc.a $(OBJS)
 
 libk: CFLAGS += -DKERNEL -ffreestanding -static -I$(KERNELD)/include
-libk: $(OBJS)
-	$(AR) -rcs $(BUILDD)/libk.a $+
+libk: clean $(OBJS)
+	$(AR) -rcs $(BUILDD)/libk.a $(OBJS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 %_asm.o: %.asm
 	$(ASM) $(ASMFLAGS) $< -o $@
+
+clean:
+	@find . -name "*.o" -type f -delete

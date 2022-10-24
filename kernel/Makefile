@@ -15,9 +15,9 @@ ASMFLAGS += -i ./include
 
 LDFLAGS += -static -nostdlib
 #LDFLAGS += -L$(BUILDD)/libk.a
-LDFLAGS += -T./linker.ld
+LDFLAGS += -T./linker.ld -Map=$(MAP)
 
-all: $(OBJS)
+all: clean $(OBJS)
 	$(LD) $(LDFLAGS) -o $(BIN) $(OBJS) $(BUILDD)/libk.a
 	grub-file --is-x86-multiboot $(BIN)
 	objdump -S --disassemble $(BIN) > $(DUMP)
@@ -27,3 +27,6 @@ all: $(OBJS)
 
 %_asm.o: %.asm
 	$(ASM) $(ASMFLAGS) $< -o $@
+
+clean:
+		@find . -name "*.o" -type f -delete
