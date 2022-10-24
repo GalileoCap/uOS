@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <errno.h>
 #include <defines.h>
 
 extern paddr_t KSSTART;

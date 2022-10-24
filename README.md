@@ -5,7 +5,7 @@
 - [ ] Basic
   - [X] Boot
     - [X] Long mode
-  - [ ] Serial output
+  - [X] Serial output
   - [ ] Interrupts
     - [ ] Catch exceptions
   - [ ] Memory

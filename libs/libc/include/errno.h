@@ -9,6 +9,7 @@ typedef u32 errno_t;
 #define EPERM 1 //U: Operation not permited
 #define EAGAIN 2 //U: Resource temporarily unavailable
 #define EINVAL 3 //U: Invalid argument
+#define ENODEV 3 //U: No such device
 
 #define errno (*_errno())
 errno_t* _errno(void);
