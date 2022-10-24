@@ -14,7 +14,7 @@ libc: CFLAGS += -pie -fPIE -fPIC -DUSER
 libc: clean $(OBJS)
 	$(AR) -rcs $(BUILDD)/libc.a $(OBJS)
 
-libk: CFLAGS += -DKERNEL -ffreestanding -static -I$(KERNELD)/include
+libk: CFLAGS += -DKERNEL -I$(KERNELD)/include
 libk: clean $(OBJS)
 	$(AR) -rcs $(BUILDD)/libk.a $(OBJS)
 

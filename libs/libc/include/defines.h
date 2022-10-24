@@ -5,6 +5,8 @@
  * S: Types
  */
 
+#include <stdbool.h>
+
 typedef signed char s8;
 typedef unsigned char u8;
 
@@ -23,12 +25,16 @@ typedef double f64;
 typedef long double f80;
 */
 
+typedef u64 size_t;
+
 typedef u64 paddr_t;
 typedef u64 vaddr_t;
 
 /*
  * S: Macros
  */
+
+#define NULL ((void*)0)
 
 #define ALWAYS_INLINE inline __attribute((always_inline))
 

@@ -18,7 +18,7 @@ OFLAGS := -Og #TODO: -O2
 CC := $(COMPD)/bin/x86_64-elf-gcc
 CFLAGS := -std=c17 -m64 -mcmodel=large
 CFLAGS += -fno-stack-protector -mno-red-zone -fno-asynchronous-unwind-tables
-CFLAGS += -mgeneral-regs-only 
+CFLAGS += -mgeneral-regs-only -ffreestanding
 CFLAGS += -Wall
 CFLAGS += $(OFLAGS)
 CFLAGS += -masm=intel

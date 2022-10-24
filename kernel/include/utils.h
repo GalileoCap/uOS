@@ -1,9 +1,8 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <errno.h>
 #include <defines.h>
 
