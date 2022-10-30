@@ -40,6 +40,7 @@ typedef u64 vaddr_t;
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define CEIL(a, b) (1 + ((a - 1) / b))
 
 #define UPPER(a) ((a) >= 'A' && ((a) <= 'Z'))
 #define LOWER(a) ((a) >= 'a' && ((a) <= 'z'))
@@ -68,6 +69,28 @@ typedef u64 vaddr_t;
 //#define F64_MIN ((f64)0x10000000000000)
 
 #ifdef KERNEL
+
+/* S: Multiboot  *******************************************/
+#define MULTIBOOT_MAGIC 0x2BADB002
+
+/* S: GDT **************************************************/
+//U: Selectors
+#define GDTCS_R0 0x0008
+#define GDTDS_R0 0x0010
+#define GDTCS_R3 0x0018
+#define GDTDS_R3 0x0020
+#define GDTTSS_S 0x0028
+
+/* S: Memory ***********************************************/
+#define PAGE_SIZE 0x1000
+
+#define USTACK_ENTRY  254
+#define KSSTART_ENTRY 500
+#define KSTACK_ENTRY  509
+#define TMP_ENTRY     510
+#define RECURSE_ENTRY 511
+#define TOTAL_ENTRIES 512
+
 #endif // KERNEL
 
 #endif // __DEFINES_H__

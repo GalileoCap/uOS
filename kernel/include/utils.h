@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <defines.h>
+#include <memory.h>
 
 extern paddr_t KSSTART;
 extern paddr_t KSEND;
