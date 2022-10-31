@@ -1,7 +1,7 @@
 #include <memory.h>
-#include <stdio.h>
 
 struct heap_block {
+  bool free;
   size_t prevSize, size;
   struct heap_block *prevFree, *nextFree;
 };
@@ -18,6 +18,10 @@ inline u64 binIdx(size_t bytes) {
   return MIN(res, FIXBINS_COUNT); //A: If it's not a fixed size, send it to the variable size
 }
 
+struct heap_block* getPrevBlock(struct heap_block *block, size_t size) {
+  return (void*)block - size - offsetof(struct heap_block, prevFree);
+}
+
 struct heap_block* getNextBlock(struct heap_block *block, size_t size) {
   return (void*)block + size + offsetof(struct heap_block, prevFree);
 }
@@ -26,12 +30,14 @@ void insertBlockToBin(struct heap_block *block) {
   block->nextFree = bins[binIdx(block->size)].firstFree;
   bins[binIdx(block->size)].firstFree = block;
   if (block->nextFree != NULL) block->nextFree->prevFree = block;
+  block->free = true;
 }
 
 void removeBlockFromBin(struct heap_block *block) {
   struct heap_bininfo *bin = &bins[binIdx(block->size)];
   if (block == bin->firstFree) bin->firstFree = block->nextFree;
   else block->prevFree->nextFree = block->nextFree;
+  block->free = false;
 }
 
 void splitBlock(struct heap_block *block, size_t bytes) {
@@ -39,27 +45,21 @@ void splitBlock(struct heap_block *block, size_t bytes) {
                     *newBlock = getNextBlock(block, bytes);
 
   //A: Create a new block after this one
-  newBlock->prevSize = bytes; //TODO: Not free
-  newBlock->size = (size_t)nextBlock - (size_t)newBlock - offsetof(struct heap_block, nextFree); //TODO: Set free
+  newBlock->prevSize = bytes;
+  newBlock->size = (size_t)nextBlock - (size_t)newBlock - offsetof(struct heap_block, nextFree);
   nextBlock->prevSize = newBlock->size;
   insertBlockToBin(newBlock);
 
   //A: Update this block
   removeBlockFromBin(block);
-  block->size = bytes; //TODO: Set not free
+  block->size = bytes;
   insertBlockToBin(block);
-
-  return;
-  //TODO?
-  //A: Make sure to split into PAGE_SIZE or smaller
-  if (newBlock->size > PAGE_SIZE)
-    splitBlock(newBlock, PAGE_SIZE);
 }
 
 void newFirstFree(size_t bytes) {
   //A: Find an already free block to split
   //A: Search in fix size
-  for (u64 idx = FIXBINS_COUNT-1; idx > binIdx(bytes); idx--) //A: Search form the largest to the smallest //TODO: Minimum size //TODO: Small->large?
+  for (u64 idx = binIdx(bytes)+1; idx < FIXBINS_COUNT; idx++) //A: Search form the largest to the smallest //TODO: Minimum size //TODO: Small->large?
     if (bins[idx].firstFree != NULL) { //A: Has a free block
       splitBlock(bins[idx].firstFree, bytes);
       return;
@@ -80,6 +80,7 @@ void newFirstFree(size_t bytes) {
     heap_end = (void*)KSEND + sizeof(size_t);
     *(size_t*)(heap_end - sizeof(size_t)) = 0;
     KSEND += expandSz;
+    printf("[kheap] newFirstFree kheap_end=%p, KSEND=%p\n", heap_end, KSEND);
   } else {
     mmu_map((vaddr_t)heap_end, expandSz, PT_RW | PT_P);
   }
@@ -100,7 +101,7 @@ void* malloc(size_t bytes) {
   if (bin->firstFree == NULL) newFirstFree(bytes);
 
   struct heap_block *res = bin->firstFree;
-  bin->firstFree = bin->firstFree->nextFree;
+  removeBlockFromBin(res);
 
   return &res->prevFree; //A: Point to the data field
 }
@@ -114,7 +115,25 @@ void* calloc(size_t count, size_t bytes) {
 }
 
 void free(void *ptr) {
-  //TODO
+  struct heap_block *block = ptr - offsetof(struct heap_block, prevFree),
+                    *prev = getPrevBlock(block, block->prevSize),
+                    *next = getNextBlock(block, block->size);
+
+  //A: Merge
+  if (prev->free) { //A: With prev
+    removeBlockFromBin(prev);
+    prev->size += block->size + offsetof(struct heap_block, prevFree); //A: Expand prev
+    next->prevSize = prev->size;
+    block = prev;
+  }
+  if (next->free) { //A: With next
+    removeBlockFromBin(next);
+    block->size += next->size + offsetof(struct heap_block, prevFree); //A: Expand block
+    next = getNextBlock(block, block->size);
+    next->prevSize = block->size;
+  }
+
+  insertBlockToBin(block);
 }
 
 void memcpy(void *_dst, void *_src, size_t count) {
