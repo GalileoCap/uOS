@@ -6,22 +6,27 @@
   - [X] Boot
     - [X] Long mode
   - [X] Serial output
-  - [ ] Interrupts
-    - [ ] Catch exceptions
-  - [X] Memory
+  - [X] Interrupts
+    - [X] Catch exceptions
+  - [ ] Memory
     - [X] Higher-half
     - [X] Kernel heap
     - [X] Page manager
     - [ ] Manage page faults
   - [ ] I/O
-    - [ ] HDD
+    - [X] HDD
+    - [ ] Keyboard
+    - [ ] Mouse
   - [ ] Filesystem
     - [ ] Virtual
+      - [ ] stdin/stdout/stderr
     - [ ] Ext2
     - [ ] read/write/stat syscalls
   - [ ] Parse, load, and start ELF
   - [ ] Scheduler  
+    - [ ] PIT
     - [ ] exit/fork/execve
+    - [ ] Send keyboard and mouse to current process
   - [ ] Root process (shell)
   - [ ] Userspace
     - [ ] [libc](https://devdocs.io/c/)
