@@ -13,7 +13,7 @@ size_t strlen(const char *restrict s);
 
 void utoa(u64 n, char *restrict buffer, u8 base);
 void itoa(u64 n, char *restrict buffer);
-void ztoa(u64 n, char *restrict buffer, u8 unit);
+void ztoa(size_t n, char *restrict buffer, u8 unit);
 
 //TODO: String to value
 //TODO: Strerror

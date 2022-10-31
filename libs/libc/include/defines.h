@@ -5,6 +5,7 @@
  * S: Types
  */
 
+#include <stddef.h>
 #include <stdbool.h>
 
 typedef signed char s8;
@@ -25,16 +26,12 @@ typedef double f64;
 typedef long double f80;
 */
 
-typedef u64 size_t;
-
 typedef u64 paddr_t;
 typedef u64 vaddr_t;
 
 /*
  * S: Macros
  */
-
-#define NULL ((void*)0)
 
 #define ALWAYS_INLINE inline __attribute((always_inline))
 
@@ -68,8 +65,9 @@ typedef u64 vaddr_t;
 //#define F64_MAX ((f64)0x7fefffffffffffff)
 //#define F64_MIN ((f64)0x10000000000000)
 
-#ifdef KERNEL
+#define PAGE_SIZE 0x1000
 
+#ifdef KERNEL
 /* S: Multiboot  *******************************************/
 #define MULTIBOOT_MAGIC 0x2BADB002
 
@@ -82,8 +80,6 @@ typedef u64 vaddr_t;
 #define GDTTSS_S 0x0028
 
 /* S: Memory ***********************************************/
-#define PAGE_SIZE 0x1000
-
 #define USTACK_ENTRY  254
 #define KSSTART_ENTRY 500
 #define KSTACK_ENTRY  509
