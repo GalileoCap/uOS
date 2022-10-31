@@ -1,5 +1,4 @@
 #include <mmu.h>
-#include <palloc.h>
 #include <serial.h>
 #include <i686.h>
 #include <utils.h>
