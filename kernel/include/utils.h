@@ -14,6 +14,4 @@ extern paddr_t KSEND;
 extern vaddr_t KSTACK_TOP;
 extern vaddr_t KSTACK_BOTTOM;
 
-extern paddr_t GDT_TSS;
-
 #endif // __UTILS_H__

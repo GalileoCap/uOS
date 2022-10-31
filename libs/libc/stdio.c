@@ -74,6 +74,7 @@ size_t sprintf(char *restrict buffer, const char *restrict format, ...) {
 #ifdef KERNEL
 
 #include <serial.h>
+#include <i686.h>
 
 size_t vprintf(const char *restrict format, va_list vlist) {
   char buffer[0x500]; //TODO: kmalloc enough space
@@ -91,6 +92,7 @@ size_t printf(const char *restrict format, ...) {
 }
 
 void panic(const char *restrict format, ...) {
+  cli();
   //TODO: Print on screen
   char buffer[0x500];
   printf("\t---PANIC---\t\n");
