@@ -8,10 +8,10 @@
   - [X] Serial output
   - [ ] Interrupts
     - [ ] Catch exceptions
-  - [ ] Memory
-    - [ ] Higher-half
-    - [ ] Kernel heap
-    - [ ] Page manager
+  - [X] Memory
+    - [X] Higher-half
+    - [X] Kernel heap
+    - [X] Page manager
     - [ ] Manage page faults
   - [ ] I/O
     - [ ] HDD
