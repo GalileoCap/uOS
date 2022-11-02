@@ -55,9 +55,10 @@ struct io_dev {
   u8 id;
   enum io_dev_t type;
   void *info;
+  void *fs;
   char mount[4]; //TODO: Expand
-  size_t (*read)(void *buffer, size_t offset, size_t count, struct io_dev *dev);
-  size_t (*write)(void *buffer, size_t offset, size_t count, struct io_dev *dev);
+  size_t (*read)(void *buffer, size_t count, size_t offset, struct io_dev *dev);
+  size_t (*write)(void *buffer, size_t count, size_t offset, struct io_dev *dev);
 };
 
 extern struct io_dev ioDevices[4];

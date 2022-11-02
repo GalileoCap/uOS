@@ -115,7 +115,7 @@ errno_t ata_readWrite_(struct io_dev *dev, u32 lba, u16 n, bool write) {
 
   u16 port = ((struct ata_info*)dev->info)->port;
   u8 slave = ((struct ata_info*)dev->info)->slave;
-  printf("[ata_readWrite_] dev=%u, lba=%x, n=%u, mode=%s\n", dev->id, lba, n, write ? "WRITE" : "READ");
+  /*printf("[ata_readWrite_] dev=%u, lba=%x, n=%u, mode=%s\n", dev->id, lba, n, write ? "WRITE" : "READ");*/
 
   //TODO: Choose Master/Slave
 
@@ -174,12 +174,12 @@ size_t ata_readWrite(void *buffer, u32 lba, size_t count, struct io_dev *dev, bo
   return res;
 }
 
-size_t ata_read(void *buffer, size_t lba, size_t count, struct io_dev *dev) {
+size_t ata_read(void *buffer, size_t count, size_t lba, struct io_dev *dev) {
   if (lba > U32_MAX) { errno = EINVAL; return 0; }
   else return ata_readWrite(buffer, lba, count, dev, false);
 }
 
-size_t ata_write(void *buffer, size_t lba, size_t count, struct io_dev *dev) {
+size_t ata_write(void *buffer, size_t count, size_t lba, struct io_dev *dev) {
   if (lba > U32_MAX) { errno = EINVAL; return 0; }
   else return ata_readWrite(buffer, lba, count, dev, true);
 }
@@ -203,6 +203,7 @@ u64 ata_init(void) {
       .id = i,
       .type = DEV_BLOCK,
       .info = info,
+      .fs = NULL,
       .read = ata_read,
       .write = ata_write
     };

@@ -1,4 +1,5 @@
 #include <mmu.h>
+#include <vfs.h>
 #include <idt.h>
 #include <ata.h>
 #include <serial.h>
@@ -20,5 +21,13 @@ void kmain(void *mbd, bool magicError) {
   if (idt_init() != EOK) panic("[kmain] IDT failed errno=%X\n", errno);
   if (ata_init() == 0) panic("[kmain] ATA failed errno=%X\n", errno);
 
+  fid_t fid = vfs_open("/dev2/readme", VFS_MODE_READ);
+  if (fid == -1) panic("[kmain] VFS_OPEN failed\n");
+  
+  char msg[60] = {'\0'};
+  size_t bytes = vfs_read(fid, msg, sizeof("Hello there!"));
+  printf("[kmain] read %z with msg:%s.\n", bytes, msg);
+
+  printf("[kmain] REACHED END\n");
   while (true);
 }
