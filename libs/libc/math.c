@@ -21,6 +21,12 @@ u64 log2c(u64 x) {
   return right + (u64)(right != left);
 }
 
-u64 pow2(u64 y) {
-  return 1 << y;
+u64 pow(u64 x, u64 y) {
+  if (x == 2) return 1 << y;
+  //TODO: Other easy powers
+
+  //TODO: Optimize
+  u64 res = 1;
+  while (y--) res *= x;
+  return res;
 }

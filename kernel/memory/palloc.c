@@ -67,17 +67,17 @@ void palloc_init(void) {
   //TODO: Handle extra nodes
   //A: Allocate the tree
   u64 treeHeight = log2c(CEIL(mmu_totalMemory, PAGE_SIZE)) + 1;
-  u64 nodes = pow2(treeHeight);
+  u64 nodes = pow(2, treeHeight);
   page_tree = calloc(nodes, sizeof(struct page_node));
   printf("[palloc_init] %p, treeHeight=%X, nodes=%X, %z\n", page_tree, treeHeight, nodes, nodes * sizeof(struct page_node));
   
   //A: Set the tree with all pages set to free
   for (u64 height = 0; height < treeHeight; height++) {
     nodes /= 2;
-    for (u64 i = pow2(height)-1; i < (pow2(height+1)-1); i++)
+    for (u64 i = pow(2, height)-1; i < (pow(2, height+1)-1); i++)
       page_tree[i].refs = (nodes > 1) ? nodes : 0; //A: Set the actual pages to free
   }
-  leavesStart = pow2(treeHeight-1)-1;
+  leavesStart = pow(2, treeHeight-1)-1;
 
   //A: Claim first pages //TODO: Optimize
   page_t usedPages = CEIL(KSEND - KSSTART, PAGE_SIZE);
