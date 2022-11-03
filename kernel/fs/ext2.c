@@ -164,12 +164,80 @@ bool ext2_find(struct vfs_file *file, struct ext2_inode *inode, struct io_dev *d
   return true;
 }
 
+u32 ext2_getInodeBlock(struct ext2_inode *inode, u32 block, struct io_dev *dev) {
+  if (block < 12) return inode->i_block[block]; //A: Direct
+  block -= 12;
+
+  //A: Indirect
+  struct ext2_fs *fs = dev->fs;
+  u64 pointersPerBlock = fs->blockSz / sizeof(u32),
+      ptrsPerSingly = pointersPerBlock,
+      ptrsPerDoubly = pow(pointersPerBlock, 2),
+      ptrsPerTriply = pow(pointersPerBlock, 3);
+
+  u32 *indirect = malloc(fs->blockSz);
+  u32 blockNum;
+
+  if (block < ptrsPerSingly) { //A: Singly indirect
+    ext2_readBlocks(indirect, inode->i_block[12], 1, false, dev); //TODO: Cache indirect?
+    blockNum = indirect[block];
+  } else if ((block - ptrsPerSingly) < ptrsPerDoubly) { //A: Doubly indirect
+    block -= ptrsPerSingly;
+
+    ext2_readBlocks(indirect, inode->i_block[13], 1, false, dev);
+    blockNum = indirect[block / ptrsPerSingly];
+    ext2_readBlocks(indirect, blockNum, 1, false, dev);
+    blockNum = indirect[block % ptrsPerSingly];
+  } else { //A: Triply indirect
+    block -= ptrsPerDoubly + ptrsPerSingly;
+
+    ext2_readBlocks(indirect, inode->i_block[14], 1, false, dev); 
+    blockNum = indirect[block / ptrsPerDoubly];
+    ext2_readBlocks(indirect, blockNum, 1, false, dev); 
+    blockNum = indirect[block % ptrsPerDoubly];
+    ext2_readBlocks(indirect, blockNum, 1, false, dev); 
+
+    block -= (block / ptrsPerDoubly) * ptrsPerDoubly;
+    blockNum = indirect[block / ptrsPerSingly];
+    ext2_readBlocks(indirect, blockNum, 1, false, dev);
+    blockNum = indirect[block % ptrsPerSingly];
+  }
+
+  free(indirect);
+  return blockNum;
+}
+
+errno_t ext2_readInodeBlock(struct ext2_inode *inode, void *buffer, u32 block, bool cache, struct io_dev *dev) {
+  struct ext2_fs *fs = dev->fs;
+  if (ALIGN_UP(inode->i_size, fs->blockSz) < fs->blockSz * block) return_errno(ENODEV); //A: Asking for more than possible //TODO: Better error
+  u32 blockNum = ext2_getInodeBlock(inode, block, dev);
+  ext2_readBlocks(buffer, blockNum, 1, cache, dev); 
+  return_errno(EOK);
+}
+
 size_t ext2_readInode(struct ext2_inode *inode, void *buffer, size_t count, size_t offset, struct io_dev *dev) {
+  if (inode->i_size < (count + offset)) { errno = ENODEV; return 0; } //A: Asking for more than possible //TODO: Better error
+
   struct ext2_fs *fs = dev->fs;
   void *_buffer = malloc(fs->blockSz);
-  ext2_readBlocks(_buffer, inode->i_block[0], 1, false, dev);
-  memcpy(buffer, _buffer, count);
-  return 0;
+  size_t total = 0;
+
+  u32 startBlock = offset / fs->blockSz, endBlock = CEIL(offset + count, fs->blockSz);
+  for (u32 block = startBlock; block < endBlock; block++) {
+    size_t _count = MIN(count, fs->blockSz);
+
+    if (ext2_readInodeBlock(inode, _buffer, block, false, dev) != EOK) goto end;
+    memcpy(buffer, _buffer + offset, _count);
+
+    offset = 0;
+    count -= _count;
+    buffer += _count;
+    total += _count;
+  }
+
+end:
+  free(_buffer);
+  return total;
 }
 
 size_t ext2_read(struct vfs_file *file, void *buffer, size_t count, struct io_dev *dev) {
@@ -177,8 +245,10 @@ size_t ext2_read(struct vfs_file *file, void *buffer, size_t count, struct io_de
 
   if (ext2_find(file, &inode, dev)) {
     return ext2_readInode(&inode, buffer, count, file->offset, dev);
-  } else errno = ENODEV;
-  return 0;
+  } else {
+    errno = ENODEV;
+    return 0;
+  }
 }
 
 size_t ext2_write(struct vfs_file *file, void *buffer, size_t count, struct io_dev *dev) {
