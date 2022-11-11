@@ -115,6 +115,7 @@ void* calloc(size_t count, size_t bytes) {
 }
 
 void free(void *ptr) {
+  return; //TODO: Fix
   struct heap_block *block = ptr - offsetof(struct heap_block, prevFree),
                     *prev = getPrevBlock(block, block->prevSize),
                     *next = getNextBlock(block, block->size);
