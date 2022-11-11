@@ -21,11 +21,19 @@ void kmain(void *mbd, bool magicError) {
   if (idt_init() != EOK) panic("[kmain] IDT failed errno=%X\n", errno);
   if (ata_init() == 0) panic("[kmain] ATA failed errno=%X\n", errno);
 
-  fid_t fid = vfs_open("/dev2/readme", VFS_MODE_READ);
+  fid_t fid = vfs_open("/dev2/readme", VFS_MODE_READ | VFS_MODE_WRITE);
   if (fid == -1) panic("[kmain] VFS_OPEN failed\n");
   
   char msg[13] = {'\0'};
   size_t bytes = vfs_read(fid, msg, sizeof(msg));
+  printf("[kmain] read %z with msg:%s.\n", bytes, msg);
+
+  if (strcmp(msg, "Hello there!")) strcpy(msg, "Ahoy there!");
+  else strcpy(msg, "Hello there!");
+  bytes = vfs_write(fid, msg, sizeof(msg));
+  printf("[kmain] wrote %z with msg:%s.\n", bytes, msg);
+
+  bytes = vfs_read(fid, msg, sizeof(msg));
   printf("[kmain] read %z with msg:%s.\n", bytes, msg);
 
   printf("[kmain] REACHED END\n");

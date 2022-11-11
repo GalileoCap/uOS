@@ -21,5 +21,6 @@ struct vfs_file {
 
 fid_t vfs_open(const char *restrict path, u16 mode);
 size_t vfs_read(fid_t fid, void *buffer, size_t count);
+size_t vfs_write(fid_t fid, void *buffer, size_t count);
 
 #endif // __VFS_H__

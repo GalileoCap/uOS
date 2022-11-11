@@ -32,6 +32,7 @@ end:
 }
 
 fid_t vfs_open(const char *restrict path, u16 mode) {
+  /*printf("[vfs_open] %s. %X\n", path, mode);*/
   //TODO: Check if file exists or create it if on CREATE mode
   //TODO: Anything else?
 
@@ -41,7 +42,7 @@ fid_t vfs_open(const char *restrict path, u16 mode) {
       *files[fid] = (struct vfs_file){
         .offset = 0,
         .mode = mode,
-        .path = malloc(strlen(path))
+        .path = malloc(strlen(path)+1)
       };
       strcpy(files[fid]->path, path);
       return fid;
@@ -51,6 +52,7 @@ fid_t vfs_open(const char *restrict path, u16 mode) {
 }
 
 size_t vfs_read(fid_t fid, void *buffer, size_t count) {
+  /*printf("[vfs_read] %i %p %z\n", fid, buffer, count);*/
   if (fid > VFS_MAXFILES || files[fid] == NULL) { errno = ENODEV; return 0; } //TODO: Better error
   //TODO: Permissions and modes
 
@@ -62,14 +64,14 @@ size_t vfs_read(fid_t fid, void *buffer, size_t count) {
 }
 
 size_t vfs_write(fid_t fid, void *buffer, size_t count) {
+  //TODO: Repeated code
+  printf("[vfs_write] %i %p %z\n", fid, buffer, count);
   if (fid > VFS_MAXFILES || files[fid] == NULL) { errno = ENODEV; return 0; } //TODO: Better error
   //TODO: Permissions and modes
 
   struct io_dev *dev = vfs_getIODev(files[fid]->path);
   if (dev == NULL) { errno = ENODEV; return 0; } //TODO: Better error
 
-  switch (*((u8*)dev->fs)) {
-    case VFS_FSTYPE_EXT2: return ext2_write(files[fid], buffer, count, dev);
-    default: { errno = ENODEV; return 0; } //TODO: Better error
-  }
+  //TODO: More filesystems
+  return ext2_write(files[fid], buffer, count, dev);
 }
