@@ -243,6 +243,11 @@ u32 ext2_getInodeBlock(struct ext2_inode *inode, u32 block, struct io_dev *dev) 
   return blockNum;
 }
 
+u32 ext2_getNextBM(u64 *blockBm) {
+  //TODO
+  return 0;
+}
+
 errno_t ext2_expandInode(struct ext2_inode *inode, u32 blocks, bool cache, struct io_dev *dev) {
   //TODO: Repeated code with ext2_find
   errno = EOK;
@@ -253,10 +258,10 @@ errno_t ext2_expandInode(struct ext2_inode *inode, u32 blocks, bool cache, struc
   struct ext2_blockGroup *bg = malloc(fs->blockSz); //TODO: Sizeof //TODO: Find empty bg
   ext2_readBlocks(bg, firstBGBlock, 1, true, dev);
   u64 *blockBm = malloc(fs->blockSz);
-  ext2_readBlocks(blockBm, bg->blockBm, 1, true, dev);
+  ext2_readBlocks(blockBm, bg->bUsageBM, 1, true, dev);
 
   u32 startIdx = CEIL(inode->i_blocks * ATA_SECTOR_SIZE, fs->blockSz);
-  for (u32 i = startBlock, block; i < startIdx + blocks; i++) {
+  for (u32 i = startIdx, block; i < startIdx + blocks; i++) {
     block = ext2_getNextBM(blockBm);
     inode->i_blocks++;
 

@@ -168,7 +168,6 @@ struct ext2_fs {
 };
 
 errno_t ext2_load(struct io_dev *dev);
-size_t ext2_read(struct vfs_file *file, void *buffer, size_t count, struct io_dev *dev);
-size_t ext2_write(struct vfs_file *file, void *buffer, size_t count, struct io_dev *dev);
+size_t ext2_RW(struct vfs_file *file, void *buffer, size_t count, bool write, struct io_dev *dev);
 
 #endif // __EXT2_H__

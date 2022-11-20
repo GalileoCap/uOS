@@ -36,7 +36,7 @@ LDFLAGS += -z max-page-size=0x1000
 #S: Disk image
 
 DISK := $(BUILDD)/hdd.img
-DISKSZ := 1 #A: In MiB
+DISKSZ := 100 #A: In MiB
 
 export
 

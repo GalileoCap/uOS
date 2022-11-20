@@ -33,8 +33,10 @@ end:
 
 fid_t vfs_open(const char *restrict path, u16 mode) {
   /*printf("[vfs_open] %s. %X\n", path, mode);*/
-  //TODO: Check if file exists or create it if on CREATE mode
   //TODO: Anything else?
+
+  if (vfs_getIODev(path) == NULL) return -1; //A: Check if device exists
+  //TODO: Check if file exists or create it if on CREATE mode
 
   for (fid_t fid = 0; fid < VFS_MAXFILES; fid++)
     if (files[fid] == NULL) {
@@ -60,7 +62,7 @@ size_t vfs_read(fid_t fid, void *buffer, size_t count) {
   if (dev == NULL) { errno = ENODEV; return 0; } //TODO: Better error
 
   //TODO: More filesystems
-  return ext2_read(files[fid], buffer, count, dev);
+  return ext2_RW(files[fid], buffer, count, false, dev);
 }
 
 size_t vfs_write(fid_t fid, void *buffer, size_t count) {
@@ -73,5 +75,5 @@ size_t vfs_write(fid_t fid, void *buffer, size_t count) {
   if (dev == NULL) { errno = ENODEV; return 0; } //TODO: Better error
 
   //TODO: More filesystems
-  return ext2_write(files[fid], buffer, count, dev);
+  return ext2_RW(files[fid], buffer, count, false, dev);
 }
