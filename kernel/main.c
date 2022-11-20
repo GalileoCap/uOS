@@ -21,7 +21,7 @@ void kmain(void *mbd, bool magicError) {
   if (idt_init() != EOK) panic("[kmain] IDT failed errno=%X\n", errno);
   if (ata_init() == 0) panic("[kmain] ATA failed errno=%X\n", errno);
 
-  fid_t fid = vfs_open("/dev2/readme", VFS_MODE_READ | VFS_MODE_WRITE);
+  fid_t fid = vfs_open("/dev2/read.me", VFS_MODE_READ | VFS_MODE_WRITE);
   if (fid == -1) panic("[kmain] VFS_OPEN failed\n");
   
   char msg[13] = {'\0'};
