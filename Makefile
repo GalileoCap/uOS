@@ -13,6 +13,10 @@ ISO := $(BUILDD)/galilos.iso
 MAP := $(BUILDD)/galilos.map
 DUMP := $(BUILDD)/galilos.dump
 
+DISK := $(BUILDD)/hdd.img
+DISKUNIT := 1048576 #In MiB
+DISKSZ := 1
+
 OFLAGS := -Og #TODO: -O2
 
 CC := $(COMPD)/bin/x86_64-elf-gcc
@@ -22,6 +26,7 @@ CFLAGS += -mgeneral-regs-only -ffreestanding
 CFLAGS += -Wall
 CFLAGS += $(OFLAGS)
 CFLAGS += -masm=intel
+CFLAGS += -I$(LIBSD)/libc/include
 
 ASM := nasm
 ASMFLAGS := -felf64
@@ -32,11 +37,13 @@ LDFLAGS := -L$(COMPD)/lib/gcc/x86_64-elf/12.2.0/libgcc.a # -lgcc
 LDFLAGS += $(OFLAGS)
 LDFLAGS += -z max-page-size=0x1000
 
-#******************************
-#S: Disk image
-
-DISK := $(BUILDD)/hdd.img
-DISKSZ := 100 #A: In MiB
+QEMU := qemu-system-x86_64
+QEMUFLAGS := -accel tcg,thread=single -cpu core2duo
+QEMUFLAGS += -serial stdio
+QEMUFLAGS += -m 128
+QEMUFLAGS += -cdrom $(ISO)
+QEMUFLAGS += -hda $(DISK)
+QEMUFLAGS += -smp 1 -usb -vga std -no-reboot
 
 export
 
@@ -44,52 +51,60 @@ export
 #S: Targets
 
 default: help
-.PHONY: bochs libc libk kernel apps iso help clean
+.PHONY: run iso kernel apps libc libk disk buildd grub help clean
 
-bochs: all
-	#TODO: Make sure disk exists
-	cd $(BUILDD) && bochs -q
+run: compiler disk apps iso
+	$(QEMU) $(QEMUFLAGS)
 
-all: compiler libc libk kernel apps iso
+iso: kernel
+	grub-mkrescue -o $(ISO) $(MOUNTD)
+	@printf "[ISO] Done\n"
+
+kernel: libk grub
+	@$(MAKE) --no-print-directory -C $(KERNELD)
+	@printf "[KERNEL] Done\n"
+
+apps: libc buildd
+	@$(MAKE) --no-print-directory -C $(APPSD)
+	@printf "[APPS] Done\n"
+
+libc: buildd
+	@$(MAKE) libc --no-print-directory -C $(LIBSD)/libc
+	@printf "[LIBC] Done\n"
+
+libk: buildd
+	@$(MAKE) libk --no-print-directory -C $(LIBSD)/libc
+	@printf "[LIBK] Done\n"
+
+disk: buildd
+	rm -f $(DISK) $(DISK).lock
+	dd if=/dev/zero of=$(DISK) bs=$(DISKUNIT) count=$(DISKSZ)
+	mkfs.ext2 -Onone -LGALIDRIVE $(DISK)
+	@printf "[DISK] Done\n"
+	#TODO: Populate disk
 
 compiler:
 	@printf "[COMPILER] Building the compiler may take several minutes, are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@./compiler.sh
 	@printf "[COMPILER] Done\n"
 
-libc:
-	@$(MAKE) libc --no-print-directory -C $(LIBSD)/libc
-	@printf "[LIBC] Done\n"
+grub: buildd
+	mkdir -p $(MOUNTD)/boot/grub
+	printf "set timeout=0 \n\
+	set default=0 \n\
+	\n\
+	menuentry \"GalilOS\" { \n\
+		multiboot /boot/galilos.bin \n\
+	}" > $(MOUNTD)/boot/grub/grub.cfg
 
-libk:
-	@$(MAKE) libk --no-print-directory -C $(LIBSD)/libc
-	@printf "[LIBK] Done\n"
-
-iso:
-	grub-mkrescue -o $(ISO) $(MOUNTD)
-	@printf "[ISO] Done\n"
-
-disk:
-	rm -f $(DISK) $(DISK).lock
-	dd if=/dev/zero of=$(DISK) bs=1048576 count=$(DISKSZ)
-	mkfs.ext2 -Onone -LGALIDRIVE $(DISK)
-	@printf "[DISK] Done\n"
-	#TODO: Populate disk
-
-kernel:
-	@$(MAKE) --no-print-directory -C $(KERNELD)
-	@printf "[KERNEL] Done\n"
-
-apps:
-	@$(MAKE) --no-print-directory -C $(APPSD)
-	@printf "[APPS] Done\n"
+buildd:
+	mkdir -p $(BUILDD) $(MOUNTD)
 
 help:
 	@printf "TODO: Help\n"
 
 clean:
 	@printf "[CLEAN] Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
-	#rm -f $(DISK) $(DISK).lock
-	rm -f $(ISO) $(MAP) $(DUMP)
-	find $(BUILDD) $(KERNELD) $(APPD) $(LIBSD) \( -name "*.o" -or -name "*.a" -or -name "*.elf" -or -name "*.bin" -or -name "*.log" \) -type f -delete
+	rm -fr $(BUILDD)
+	find $(KERNELD) $(APPD) $(LIBSD) \( -name "*.o" -or -name "*.a" -or -name "*.elf" -or -name "*.bin" -or -name "*.log" \) -type f -delete
 	@printf "\n[CLEAN] Cleaning\n"

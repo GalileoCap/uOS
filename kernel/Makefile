@@ -7,14 +7,13 @@ CSRC := $(wildcard *.c) $(wildcard **/*.c)
 ASMSRC := $(wildcard *.asm) $(wildcard **/*.asm)
 OBJS := $(CSRC:.c=.o) $(ASMSRC:.asm=_asm.o)
 
-CFLAGS += -ffreestanding -static -DKERNEL
+CFLAGS += -ffreestanding -static
+CFLAGS += -DKERNEL -I./include
 CFLAGS += -ekmain
-CFLAGS += -I./include -I$(LIBSD)/libc/include
 
 ASMFLAGS += -i ./include
 
 LDFLAGS += -static -nostdlib
-#LDFLAGS += -L$(BUILDD)/libk.a
 LDFLAGS += -T./linker.ld -Map=$(MAP)
 
 all: clean $(OBJS)
@@ -29,4 +28,4 @@ all: clean $(OBJS)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 clean:
-		@find . -name "*.o" -type f -delete
+	@find . -name "*.o" -type f -delete

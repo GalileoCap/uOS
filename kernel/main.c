@@ -24,6 +24,7 @@ void kmain(void *mbd, bool magicError) {
   fid_t fid = vfs_open("/dev2/read.me", VFS_MODE_READ | VFS_MODE_WRITE);
   if (fid == -1) panic("[kmain] VFS_OPEN failed\n");
   
+  /*
   char msg[13] = {'\0'};
   size_t bytes = vfs_read(fid, msg, sizeof(msg));
   printf("[kmain] read %z with msg:%s.\n", bytes, msg);
@@ -35,6 +36,7 @@ void kmain(void *mbd, bool magicError) {
 
   bytes = vfs_read(fid, msg, sizeof(msg));
   printf("[kmain] read %z with msg:%s.\n", bytes, msg);
+  */
 
   printf("[kmain] REACHED END\n");
   while (true);

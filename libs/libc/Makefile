@@ -1,13 +1,11 @@
 #************************************************************
 #S: General
 
-INCLUDE := ./include
-
 CSRC := $(wildcard *.c) $(wildcard **/*.c)
 ASMSRC := $(wildcard *.asm) $(wildcard **/*.asm)
 OBJS := $(CSRC:.c=.o) $(ASMSRC:.asm=_asm.o)
 
-CFLAGS += -I./include -I$(LIBS)/libc/include
+CFLAGS += -I./include
 ASMFLAGS += -i ./include
 
 libc: CFLAGS += -pie -fPIE -fPIC -DUSER

@@ -60,7 +60,7 @@ errno_t ext2_load(struct io_dev *dev) {
   printf("[ext2_parse] dev=%u\n", dev->id);
 
   struct ext2_superblock sb;
-  if (dev->read(&sb, sizeof(struct ext2_superblock), EXT2_SBSEGMENT, dev) != sizeof(struct ext2_superblock))
+  if (dev->read(&sb, sizeof(sb), EXT2_SBSEGMENT, dev) != sizeof(sb))
     return_errno(ENODEV); //TODO: Better errors
 
   if (sb.sign != EXT2_MAGIC) return_errno(ENODEV); 
@@ -99,10 +99,10 @@ errno_t ext2_load(struct io_dev *dev) {
   memcpy(fs->id, sb.fsID, sizeof(fs->id));
   memcpy(fs->name, sb.name, sizeof(fs->name));
   
-  for (int i = 0; i < EXT2_CACHE_COUNT; i++)
+  for (u64 i = 0; i < EXT2_CACHE_COUNT; i++)
     fs->cache[i] = (struct ext2_block){
       .block = -1,
-      .data = malloc(fs->blockSz)
+      .data = NULL//malloc(fs->blockSz)
     };
   
   printf("[ext2_load] SUCCESFULL name=%s, version=%u.%u id=%X%X\n", fs->name, fs->major, fs->minor, fs->id[0], fs->id[1]);
