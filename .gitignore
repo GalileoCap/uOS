@@ -10,3 +10,7 @@
 *.map
 *.dump
 compiler/*
+
+build
+__pycache__
+.udo.db
