@@ -48,9 +48,9 @@ COMPD = './compiler'
 BUILDD = './build'
 MOUNTD = f'{BUILDD}/mnt'
 
-KERNELD = './kernel'
-LIBSD = './libs'
-APPSD = './apps'
+KERNELD = './src/kernel'
+LIBSD = './src/libs'
+APPSD = './src/apps'
 LIBCD = f'{LIBSD}/libc'
 
 BIN = f'{MOUNTD}/boot/galilos.bin'
