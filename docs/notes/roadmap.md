@@ -2,14 +2,14 @@
 NOTE: This list is not complete. It's just meant as a simple way to decide what to do next. It will be expanded and changed frequently.
 
 * Basics
-  - [ ] Compiler  
-  - [ ] Boot in 64-bit mode
-    - [ ] GDT
-    - [ ] Identity paging and Higher-half  
+  - [X] Compiler  
+  - [X] Boot in 64-bit mode
+    - [X] GDT
+    - [X] Identity paging and Higher-half  
     With enough space before the MM.
   - [ ] I/O
     - [ ] Screen
-    - [ ] Serial
+    - [X] Serial
     - [ ] Log through screen and serial (exceptions, interrupts, and syscalls)
   - [ ] Basic memory manager  
     Linked list of free/used blocks of pages.  
@@ -23,6 +23,7 @@ NOTE: This list is not complete. It's just meant as a simple way to decide what 
     - [ ] Manipulate the filesystem (ls, mv, rm, cp)
     - [ ] Read files (cat)
     - [ ] Execute files
+  - [ ] Boot without GRUB
 
 * Automatic testing
 
@@ -39,3 +40,6 @@ NOTE: This list is not complete. It's just meant as a simple way to decide what 
 * Expand
   - [ ] Multiple cores
   - [ ] Multi-threads
+  - [ ] Swap memory
+  - [ ] Hibernate
+  - [ ] Checkpoint/Restore (CRIU)
