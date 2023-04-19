@@ -62,7 +62,7 @@ GRUBCFG = f'{MOUNTD}/boot/grub/grub.cfg'
 DISK = f'{BUILDD}/hdd.img'
 DISKUNIT = 1024**2
 DISKSZ = 1
-DISKLABEL = 'GALIDRIVE'
+DISKLABEL = 'TESTDRIVE'
 
 OFLAGS = ' -Og' #TODO: -O2
 
@@ -221,7 +221,7 @@ def TaskGrub():
   cfg = '''set timeout=0
 set default=0
 
-menuentry "GalilOS" {
+menuentry "uOS" {
   multiboot /boot/galilos.bin
 }'''
 

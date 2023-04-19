@@ -1,4 +1,4 @@
-# GalilOS
+# uOS
 
 ## General roadmap
 
