@@ -7,7 +7,9 @@ I'd like to make a customizable micro-kernel. This means a simple kernel that st
 
 ### Current
 I'm _dusting off_ the ol' GalilOS project. I'll be removing a lot of parts of the working OS to start them up again in a more organized way.  
-First stop: Serial I/O.
+- [X] Serial I/O.
+- [ ] Remove most things to "restart" the project
+- [ ] Put things back in order one by one (only what's needed for the new roadmap)
 
 ## Repo structure
 - src

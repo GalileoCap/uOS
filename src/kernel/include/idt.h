@@ -57,7 +57,4 @@ struct ist {
   u64 iobp0, iobp1, iobp2, iobp3;
 } __attribute__((__packed__));
 
-errno_t idt_init(void);
-void idt_register(u8 vector, void *isr, u8 flags);
-
 #endif //  __IDT_H__
