@@ -24,9 +24,15 @@ void kmain(void *mbd, bool magicError) {
 
   u64 *foo, *bar, *baz;
   foo = calloc(1, sizeof(u64));
-  bar = calloc(5, sizeof(u16));
+  bar = calloc(5, sizeof(u64));
   baz = calloc(1, sizeof(u64));
-  printf("%p %p %p\n", foo, bar, baz);
+  printf("A: %p %p %p\n", foo, bar, baz);
+  free(foo); free(bar); free(baz);
+
+  foo = calloc(1, sizeof(u64));
+  bar = calloc(5, sizeof(u64));
+  baz = calloc(1, sizeof(u64));
+  printf("B: %p %p %p\n", foo, bar, baz);
   free(foo); free(bar); free(baz);
 
   foo = calloc(2, sizeof(u64));
@@ -36,8 +42,8 @@ void kmain(void *mbd, bool magicError) {
   bar[1] = 0x600DB007;
   free(bar);
   baz = calloc(2, sizeof(u64));
-  printf("%p %p %p\n", foo, bar, baz);
-  printf("%X %X\n", baz[0], baz[1]);
+  printf("C: %p %p %p\n", foo, bar, baz);
+  printf("D: %X %X\n", baz[0], baz[1]);
 
   printf("[kmain] REACHED END\n");
   printf("[you] ");

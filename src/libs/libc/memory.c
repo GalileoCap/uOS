@@ -15,26 +15,46 @@ void memset(char *at, char value, size_t count) {
 /************************************************************/
 /* S: Malloc ************************************************/
 
-void *heapStart = NULL,
-     *heapEnd,
-     *nextFree;
+struct heapNode_t {
+  struct heapNode_t *prev, *next;
+  bool free;
+  char data[];
+};
+
+struct heapNode_t *heapHead = NULL,
+                  *heapTail = NULL;
+void *heapEnd = NULL;
+
+void* nodeData(struct heapNode_t *node) {
+  return (void*)node + offsetof(struct heapNode_t, data);
+}
+
+size_t nodeSize(struct heapNode_t *node) {
+  return (void*)(node->next) - nodeData(node);
+}
+
+struct heapNode_t* nodeFromData(void *ptr) {
+  return ptr - offsetof(struct heapNode_t, data);
+}
 
 void expandHeap(size_t bytes) {
-  size_t expandSz = ALIGN_UP(bytes, PAGE_SIZE);
+  size_t expandSz = ALIGN_UP(sizeof(struct heapNode_t) + bytes, PAGE_SIZE);
 
-  if (heapStart == NULL) { // The first time, claim a page
+  if (heapHead == NULL) { // The first time, claim a page
 #ifndef KERNEL
   //TODO: User syscall
 #else
-    heapStart = (void*)KSEND; 
-    heapEnd = heapStart + expandSz;
-    KSEND += expandSz;
+    heapHead = (struct heapNode_t*)KSEND; 
+    heapEnd = (void*)heapHead + expandSz;
+    KSEND = (paddr_t)heapEnd;
 #endif
 
-    nextFree = heapStart;
-  }
-
-  if ((nextFree + bytes) > heapEnd) {
+    heapHead->prev = NULL;
+    heapHead->next = NULL;
+    heapHead->free = true;
+    heapTail = heapHead;
+    /*printf("[expandHeap] INIT: %p %p %p\n", heapHead, heapTail, heapEnd);*/
+  } else {
 #ifndef KERNEL
   //TODO: User syscall
 #else
@@ -42,21 +62,51 @@ void expandHeap(size_t bytes) {
 #endif
 
     heapEnd += expandSz;
+    /*printf("[expandHeap] EXPAND: %p %p %p\n", heapHead, heapTail, heapEnd);*/
   }
 }
 
-void* getNextFree(size_t bytes) {
-  bytes = ALIGN_UP(bytes, HEAP_ALIGN);
-  expandHeap(bytes);
+struct heapNode_t* getNextFreeFrom(struct heapNode_t *node) {
+  while (node != NULL && !node->free)
+    node = node->next;
+  return node;
+}
 
-  void *res = nextFree;
-  nextFree += bytes;
+struct heapNode_t* getFirstFreeOfSize(size_t bytes) {
+  struct heapNode_t *node = getNextFreeFrom(heapHead);
+  while (node != NULL && nodeSize(node) < bytes)
+    node = getNextFreeFrom(node);
 
-  return res;
+  if (node == NULL) {
+    expandHeap(bytes);
+    node = heapTail;
+  }
+
+  if (nodeSize(node) > (bytes + sizeof(struct heapNode_t) + HEAP_ALIGN)) { // Split if large enough
+    struct heapNode_t *newNode = nodeData(node) + bytes;
+    newNode->prev = node;
+    newNode->next = node->next;
+    newNode->free = true;
+    if (newNode->next != NULL)
+      newNode->next->prev = newNode;
+
+    node->next = newNode;
+    if (node == heapTail)
+      heapTail = newNode;
+    /*printf("[splitNode] %p %p %p\n", node, newNode, heapTail);*/
+  }
+
+  return node;
 }
 
 void* malloc(size_t bytes) {
-  return getNextFree(bytes);
+  bytes = ALIGN_UP(bytes, HEAP_ALIGN);
+
+  struct heapNode_t *node = getFirstFreeOfSize(bytes);
+  /*printf("[malloc] %p %x %p %p\n", node, node->free, node->prev, node->next, nodeData(node));*/
+  node->free = false;
+
+  return nodeData(node);
 }
 
 void* calloc(size_t n, size_t bytes) {
@@ -64,5 +114,23 @@ void* calloc(size_t n, size_t bytes) {
 }
 
 void free(void *ptr) {
+  struct heapNode_t *node = nodeFromData(ptr);
+  /*printf("[free] %p %p %z\n", ptr, node, sizeof(struct heapNode_t));*/
+  node->free = true;
+
+  if (node->prev != NULL && node->prev->free) { // Merge back
+    node->prev->next = node->next;
+    if (node->next != NULL)
+      node->next->prev = node->prev;
+    node = node->prev; // To allow merging forward
+  }
+
+  if (node->next != NULL && node->next->free) { // Merge forward
+    if (node->next == heapTail)
+      heapTail = node;
+
+    node->next = node->next->next;
+    if (node->next != NULL)
+      node->next->prev = node;
+  }
 }
-  
