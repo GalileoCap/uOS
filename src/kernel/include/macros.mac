@@ -37,3 +37,10 @@
 %endmacro
 
 %define BREAKPOINT xchg bx, bx
+
+%macro releasePic 1
+  extern pic_eoi
+  mov dl, %1
+  call pic_eoi
+%endmacro
+

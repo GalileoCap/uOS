@@ -12,6 +12,7 @@ struct idt_desc IDT_DESC = {
 struct tss *GDT_TSS;
 struct ist IST;
 
+extern void* ignore_isr[];
 extern void* except_isr[];
 extern void* clock_isr;
 extern void* keyboard_isr;
@@ -34,6 +35,10 @@ errno_t idt_init(void) {
   //A: Exceptions
   for (u8 i = 0; i < 32; i++)
     idt_register(i, except_isr[i], GDT_TYPE_TRAP | GDT_PERM_KERNEL);
+
+  // By default ignore all other interruptions
+  for (u64 i = 32; i < 256; i++)
+    idt_register(i, ignore_isr[i], GDT_TYPE_TRAP | GDT_PERM_KERNEL);
 
   //A: I/O
   idt_register(32, &clock_isr, GDT_TYPE_INTERRUPT | GDT_PERM_KERNEL); //A: Clock
