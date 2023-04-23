@@ -1,5 +1,6 @@
 #include <serial.h>
 #include <mmu.h>
+#include <idt.h>
 #include <utils.h>
 
 //U: Define global variables //NOTE: Their values get set somewhere else
@@ -21,6 +22,9 @@ void kmain(void *mbd, bool magicError) {
 
   if (mmu_init((struct multiboot_info*)mbd) != EOK)
     panic("[kmain] MMU failed errno=%X\n", errno);
+
+  if (idt_init() != EOK) 
+    panic("[kmain] IDT failed errno=%X\n", errno);
 
   printf("[kmain] REACHED END\n");
   printf("[you] ");
