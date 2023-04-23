@@ -36,4 +36,6 @@ errno_t mmu_umap(vaddr_t vaddr, size_t length);
 
 errno_t mmu_init(const struct multiboot_info *mbd);
 
+void mmu_printCurrent(void);
+
 #endif // __MMU_H__

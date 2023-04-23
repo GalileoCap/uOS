@@ -16,7 +16,7 @@ void kmain(void *mbd, bool magicError) {
     panic("[kmain] Serial failed errno=%X\n", errno);
   printf(
     "[kmain] Testing format: %d %i %u %z %x %X %p %s %c %% %a\n",
-    1, -1, -2, 1025 * 0x1000, 0x6007F337, 0x600DB007, kmain, "\"A string\"", 'G'
+    1, -1, -2, 1025 * 0x1000, 0x600DF337, 0x600DB007, kmain, "\"A string\"", 'G'
   );
 
   if (mmu_init((struct multiboot_info*)mbd) != EOK)

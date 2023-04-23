@@ -13,6 +13,39 @@ inline u64* getTable(u64 pml3e, u64 pml2e, u64 pml1e) {
   return (u64*)(getVaddr(RECURSE_ENTRY, pml3e, pml2e, pml1e) | (0xFFFFul << 48)); //TODO: Why do I need the 0xFFFFul? Crashes without it
 }
 
+void _mmu_printTable(u64 pml3e, u64 pml2e, u64 pml1e) { //TODO: Rename
+  u64 *table = getTable(pml3e, pml2e, pml1e);
+    u64 start = TOTAL_ENTRIES-1, end = 0;
+    for (u64 idx = 0; idx < TOTAL_ENTRIES; idx++)
+      if (table[idx] != 0) {
+        start = MIN(start, idx);
+        end = MAX(end, idx)+1;
+      }
+    if (end == 0) printf("EMPTY TABLE\n"); //TODO
+    else printf(
+      "%p-%p -> %p-%p\n",
+      getVaddr(pml3e, pml2e, pml1e, start), getVaddr(pml3e, pml2e, pml1e, end-1) + (PAGE_SIZE-1),
+      CR3_ADDR(table[start]), CR3_ADDR(table[end-1]) + (PAGE_SIZE-1)
+    );
+}
+
+void mmu_printTable(u64 pml3e, u64 pml2e, u64 pml1e) {
+  u64 *table = getTable(pml3e, pml2e, pml1e);
+  if (pml3e != RECURSE_ENTRY) _mmu_printTable(pml3e, pml2e, pml1e); //TODO: Merge continuous spaces
+  else for (u64 idx = 0; idx < TOTAL_ENTRIES; idx++) {
+    if (idx == RECURSE_ENTRY) continue;
+    else if (table[idx] != 0) {
+      if (pml1e == RECURSE_ENTRY) mmu_printTable(RECURSE_ENTRY, RECURSE_ENTRY, idx);
+      else if (pml2e == RECURSE_ENTRY) mmu_printTable(RECURSE_ENTRY, pml1e, idx);
+      else mmu_printTable(pml2e, pml1e, idx);
+    }
+  }
+}
+
+void mmu_printCurrent(void) {
+  mmu_printTable(RECURSE_ENTRY, RECURSE_ENTRY, RECURSE_ENTRY);
+}
+
 //************************************************************
 //* S: Init **************************************************
 
@@ -67,7 +100,7 @@ static void _mmapTMP(u64 pml3e, u64 pml2e, u64 pml1e, u64 entry, u16 attrs) { //
 }
 
 errno_t mmu_mapTo(vaddr_t vaddr, paddr_t to, u16 attrs) {
-  /*printf("[mmu_mapTo] vaddr=%p, to=%p, attrs=%X\n", vaddr, to, attrs);*/
+  printf("[mmu_mapTo] vaddr=%p, to=%p, attrs=%X\n", vaddr, to, attrs);
   u64 pml4e = PML4E(vaddr), pml3e = PML3E(vaddr), pml2e = PML2E(vaddr), pml1e = PML1E(vaddr);
 
   _mmapTMP(RECURSE_ENTRY, RECURSE_ENTRY, RECURSE_ENTRY, pml4e, attrs);
@@ -87,7 +120,7 @@ errno_t mmu_map(vaddr_t vaddr, size_t length, u16 attrs) {
   //TODO: Add to process' list of claimed pages
 
   page_t pages = CEIL(length, PAGE_SIZE);
-  /*printf("[mmu_map] vaddr=%p, length=%z(%X), attrs=%X\n", vaddr, length, pages, attrs);*/
+  printf("[mmu_map] vaddr=%p, length=%z(%X), attrs=%X\n", vaddr, length, pages, attrs);
   for (page_t i = 0; i < pages; i++)
     mmu_mapTo(vaddr + i * PAGE_SIZE, PAGE_TO_ADDR(palloc()), attrs); //TODO: palloc all pages at the same time
 
@@ -117,6 +150,3 @@ errno_t ummap(vaddr_t vaddr) {
 ENDOK:
   return_errno(EOK);
 }
-
-//************************************************************
-//* S: mmap **************************************************
