@@ -22,29 +22,6 @@ void kmain(void *mbd, bool magicError) {
   if (mmu_init((struct multiboot_info*)mbd) != EOK)
     panic("[kmain] MMU failed errno=%X\n", errno);
 
-  u64 *foo, *bar, *baz;
-  foo = calloc(1, sizeof(u64));
-  bar = calloc(5, sizeof(u64));
-  baz = calloc(1, sizeof(u64));
-  printf("A: %p %p %p\n", foo, bar, baz);
-  free(foo); free(bar); free(baz);
-
-  foo = calloc(1, sizeof(u64));
-  bar = calloc(5, sizeof(u64));
-  baz = calloc(1, sizeof(u64));
-  printf("B: %p %p %p\n", foo, bar, baz);
-  free(foo); free(bar); free(baz);
-
-  foo = calloc(2, sizeof(u64));
-  foo[0] = 0x600DF337;
-  free(foo);
-  bar = calloc(5, sizeof(u64));
-  bar[1] = 0x600DB007;
-  free(bar);
-  baz = calloc(2, sizeof(u64));
-  printf("C: %p %p %p\n", foo, bar, baz);
-  printf("D: %X %X\n", baz[0], baz[1]);
-
   printf("[kmain] REACHED END\n");
   printf("[you] ");
   char c;

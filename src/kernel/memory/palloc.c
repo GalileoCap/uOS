@@ -27,8 +27,7 @@ u64 pfree(page_t page) {
 errno_t palloc_init(void) {
   // Allocate the list
   totalPages = CEIL(mmu_totalMemory, PAGE_SIZE);
-  page_list = (struct page_node*)KSEND;
-  KSEND += ALIGN_UP(totalPages * sizeof(struct page_node), PAGE_SIZE);
+  page_list = calloc(totalPages, sizeof(struct page_node));
   printf(
     "[palloc_init] page_list=%p, totalPages=%X, size=%z\n",
     page_list, totalPages, totalPages * sizeof(struct page_node)
