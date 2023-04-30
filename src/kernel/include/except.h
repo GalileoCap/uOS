@@ -9,6 +9,6 @@ struct except {
   u64 rip, cs, rflags, rsp, ss;
 } __attribute__((packed));
 
-void exception_handler(const struct except *exception);
+void exception_handler(const struct except *exception) asm("exception_handler");
 
 #endif // __EXCEPT_H__

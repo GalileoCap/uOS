@@ -19,7 +19,7 @@ char serial_get(u16 port) {
   return inb(port);
 }
 
-size_t serial_gets(u16 port, char *restrict buffer, size_t count) {
+size_t serial_gets(u16 port, char *buffer, size_t count) {
   if (!checkPort(port)) return_errno(EINVAL);
 
   for (size_t i = 0; i < count; i++)
@@ -34,7 +34,7 @@ void serial_put(u16 port, char c) {
   outb(port, c);
 }
 
-size_t serial_puts(u16 port, const char *restrict buffer, size_t count) {
+size_t serial_puts(u16 port, const char *buffer, size_t count) {
   if (!checkPort(port)) return_errno(EINVAL);
 
   for (size_t i = 0; i < count; i++)

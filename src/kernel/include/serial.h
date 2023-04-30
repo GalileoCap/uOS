@@ -50,8 +50,8 @@ errno_t serial_init(u16 port);
  * Returns the number of bytes actually read/written
  * Sets errno to EOK on success, EINVAL if the port is wrong, or ENODEV if the device isn't responsive
  */
-size_t serial_gets(u16 port, char *restrict buffer, size_t count);
-size_t serial_puts(u16 port, const char *restrict msg, size_t count);
+size_t serial_gets(u16 port, char *buffer, size_t count);
+size_t serial_puts(u16 port, const char *msg, size_t count);
 
 //TODO: Change into a character device
 

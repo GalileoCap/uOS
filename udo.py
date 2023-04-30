@@ -66,12 +66,14 @@ DISKLABEL = 'TESTDRIVE'
 
 OFLAGS = ' -Og' #TODO: -O2
 
-CC = f'{COMPD}/bin/x86_64-elf-gcc'
+# CC = f'{COMPD}/bin/x86_64-elf-gcc'
+CC = f'{COMPD}/bin/x86_64-elf-g++'
 CFLAGS = (
-  '-std=c17 -m64 -mcmodel=large'
+  '-std=c++20 -m64 -mcmodel=large'
   + ' -fno-stack-protector -mno-red-zone -fno-asynchronous-unwind-tables'
   + ' -mgeneral-regs-only -ffreestanding'
-  + ' -Wall'
+  + ' -w' # + ' -Wall' #TODO: Re-enable warnings
+  + ' -nostartfiles -nostdlib'
   + ' -masm=intel'
   + f' -I{LIBSD}/libc/include'
   + OFLAGS

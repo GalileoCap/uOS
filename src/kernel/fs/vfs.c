@@ -39,22 +39,22 @@ struct vfs_file* getFileByFid(fid_t fid) {
   return file;
 }
 
-struct vfs_filePath *splitPathIntoParts(const char *restrict path) {
-  char *tmppath = zalloc(strlen(path)+1);
+struct vfs_filePath *splitPathIntoParts(const char *path) {
+  char *tmppath = (char*)zalloc(strlen(path)+1);
   strcpy(tmppath, path);
   strreplace(tmppath, '/', '\0');
 
   struct vfs_filePath *res, *part;
   for (size_t i = 1; i < strlen(path); i += strlen(tmppath+i)+1) {
     if (i == 1) {
-      part = zalloc(sizeof(struct vfs_filePath));
+      part = (struct vfs_filePath*)zalloc(sizeof(struct vfs_filePath));
       res = part;
     } else {
-      part->next = zalloc(sizeof(struct vfs_filePath));
+      part->next = (struct vfs_filePath*)zalloc(sizeof(struct vfs_filePath));
       part = part->next;
     }
 
-    part->part = zalloc(strlen(tmppath+i)+1);
+    part->part = (char*)zalloc(strlen(tmppath+i)+1);
     strcpy(part->part, tmppath+i);
   }
 
@@ -62,17 +62,17 @@ struct vfs_filePath *splitPathIntoParts(const char *restrict path) {
   return res;
 }
 
-struct vfs_file* newFile(const char *restrict path, u16 mode) {
+struct vfs_file* newFile(const char *path, u16 mode) {
   if (strlen(path) <= 1 || path[0] != '/')
     return NULL; //TODO: Errno
 
-  struct vfs_file *file = malloc(sizeof(struct vfs_file));
+  struct vfs_file *file = (struct vfs_file*)malloc(sizeof(struct vfs_file));
   file->offset = 0;
   file->mode = mode;
   file->path = splitPathIntoParts(path);
   
   if (vfs_getIODev(file->path) == NULL)
-    return -1; //A: Check if device exists //TODO: MOve this to newFile
+    return NULL; //A: Check if device exists //TODO: free file
 
   if (files_head == NULL) {
     file->fid = 3;
@@ -104,9 +104,10 @@ void freeFile(fid_t fid) {
     files_tail = file->prev;
 
   free(file);
+  //TODO: Free path
 }
 
-fid_t vfs_open(const char *restrict path, u16 mode) {
+fid_t vfs_open(const char *path, u16 mode) {
   printf("[vfs_open] \"%s\" %X\n", path, mode);
 
   struct vfs_file *file = newFile(path, mode);
@@ -133,7 +134,7 @@ size_t vfs_read(fid_t fid, void *buffer, size_t count) {
   }
 
   //TODO: More filesystems
-  return ext2_RW(file, buffer, count, false, dev);
+  return ext2_read(file, buffer, count, dev);
 }
 
 size_t vfs_write(fid_t fid, void *buffer, size_t count) {
@@ -154,5 +155,5 @@ size_t vfs_write(fid_t fid, void *buffer, size_t count) {
   }
 
   //TODO: More filesystems
-  return ext2_RW(file, buffer, count, false, dev);
+  return ext2_write(file, buffer, count, dev);
 }

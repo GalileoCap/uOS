@@ -14,7 +14,7 @@ void pic_remap(void);
 void pic_enable(void);
 void pic_disable(void);
 
-void pic_eoi(u8 irq);
+void pic_eoi(u8 irq) asm("pic_eoi");
 
 void IRQ_setMask(unsigned char IRQline);
 void IRQ_clearMask(unsigned char IRQline);

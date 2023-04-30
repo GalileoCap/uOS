@@ -11,6 +11,7 @@ paddr_t KSEND;
 vaddr_t KSTACK_TOP;
 vaddr_t KSTACK_BOTTOM;
 
+void kmain(void *mbd, bool magicError) asm("kmain");
 void kmain(void *mbd, bool magicError) {
   if (magicError)
     panic("[kmain] Invalid boot magic mbd=%p\n", mbd); //TODO: Print more information
@@ -33,7 +34,7 @@ void kmain(void *mbd, bool magicError) {
 
   /*fid_t fid = vfs_open("/dev0/README.md", VFS_MODE_READ | VFS_MODE_WRITE);*/
   fid_t fid = vfs_open("/dev0/subdir/test", VFS_MODE_READ | VFS_MODE_WRITE);
-  if (fid == -1) panic("[kmain] VFS_OPEN failed errno=%X\n", errno);
+  if (fid == FID_INVALID) panic("[kmain] VFS_OPEN failed errno=%X\n", errno);
   
   char msg[12] = {'\0'};
   size_t count = vfs_read(fid, msg, sizeof(msg)-1);

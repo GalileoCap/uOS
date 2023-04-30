@@ -1,7 +1,7 @@
 #include <string.h>
 #include <errno.h>
 
-size_t strlen(const char *restrict s) {
+size_t strlen(const char *s) {
   size_t i = 0;
   while (s[i]) i++;
   return i;
@@ -15,7 +15,7 @@ void strrev(char *s) {
   }
 }
 
-char* strcpy(char *restrict dst, const char *restrict src) {
+char* strcpy(char *dst, const char *src) {
   size_t i = 0;
   do {
     dst[i] = src[i];
@@ -23,7 +23,7 @@ char* strcpy(char *restrict dst, const char *restrict src) {
   return dst;
 }
 
-bool strncmp(const char *restrict x, const char *restrict y, size_t count) {
+bool strncmp(const char *x, const char *y, size_t count) {
   size_t i = 0;
   do {
     if (x[i] != y[i]) return false;
@@ -32,18 +32,18 @@ bool strncmp(const char *restrict x, const char *restrict y, size_t count) {
   return i == count || (x[i] == '\0' && y[i] == '\0');
 }
 
-bool strcmp(const char *restrict x, const char *restrict y) {
+bool strcmp(const char *x, const char *y) {
   return strncmp(x, y, -1);
 }
 
-void strreplace(char *restrict s, char x, char y) {
+void strreplace(char *s, char x, char y) {
   while (*s) {
     if (*s == x) *s = y;
     s++;
   }
 }
 
-void utoa(u64 n, char *restrict out, u8 base) {
+void utoa(u64 n, char *out, u8 base) {
   if (base == 0 || base > 16) { errno = EINVAL; return; }
 
   char format[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
@@ -57,7 +57,7 @@ void utoa(u64 n, char *restrict out, u8 base) {
   strrev(out);
 }
 
-void itoa(u64 n, char *restrict out) {
+void itoa(u64 n, char *out) {
   bool neg = n < 0;
   if (neg) n = -n;
 
@@ -65,7 +65,7 @@ void itoa(u64 n, char *restrict out) {
   if (neg) out[0] = '-';
 }
 
-void ptoa(u64 n, char *restrict out) {
+void ptoa(u64 n, char *out) {
   out[0] = '0'; out[1] = 'x';
   out += 2;
 
@@ -81,7 +81,7 @@ void ptoa(u64 n, char *restrict out) {
   utoa(n, out, 16);
 }
 
-void ztoa(size_t n, char *restrict buffer, u8 unit) {
+void ztoa(size_t n, char *buffer, u8 unit) {
   if (unit != (u8)-1 && unit > 4) { errno = EINVAL; return; }
 
   char* units[] = {"B", "KiB", "MiB", "GiB", "TiB"}; //TODO: More units

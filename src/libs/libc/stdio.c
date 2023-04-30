@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-size_t vsprintf(char *restrict bout, const char *restrict format, va_list vlist) {
+size_t vsprintf(char *bout, const char *format, va_list vlist) {
   //TODO: Flags
   //TODO: n$
   size_t res = 0;
@@ -63,7 +63,7 @@ size_t vsprintf(char *restrict bout, const char *restrict format, va_list vlist)
   return res;
 }
 
-size_t sprintf(char *restrict buffer, const char *restrict format, ...) {
+size_t sprintf(char *buffer, const char *format, ...) {
   va_list vlist;
   va_start(vlist, format);
   size_t res = vsprintf(buffer, format, vlist);
@@ -76,14 +76,14 @@ size_t sprintf(char *restrict buffer, const char *restrict format, ...) {
 #include <serial.h>
 #include <i686.h>
 
-size_t vprintf(const char *restrict format, va_list vlist) {
+size_t vprintf(const char *format, va_list vlist) {
   char buffer[0x500]; //TODO: kmalloc enough space
   size_t res = vsprintf(buffer, format, vlist);
   serial_puts(COM1, buffer, res-1);
   return res;
 }
 
-size_t printf(const char *restrict format, ...) {
+size_t printf(const char *format, ...) {
   va_list vlist;
   va_start(vlist, format);
   size_t res = vprintf(format, vlist);
@@ -91,7 +91,7 @@ size_t printf(const char *restrict format, ...) {
   return res;
 }
 
-void panic(const char *restrict format, ...) {
+void panic(const char *format, ...) {
   cli();
   //TODO: Print on screen
   char buffer[0x500];
@@ -111,7 +111,7 @@ void panic(const char *restrict format, ...) {
 
 #else // USER
 
-size_t printf(const char *restrict format, ...);
-size_t vprintf(const char *restrict format, va_list vlist);
+size_t printf(const char *format, ...);
+size_t vprintf(const char *format, va_list vlist);
 
 #endif // KERNEL

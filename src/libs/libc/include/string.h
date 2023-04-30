@@ -3,17 +3,17 @@
 
 #include <defines.h>
 
-void strrev(char *restrict s);
-char* strcpy(char *restrict dst, const char *restrict src);
-void strreplace(char *restrict s, char x, char y);
+void strrev(char *s);
+char* strcpy(char *dst, const char *src);
+void strreplace(char *s, char x, char y);
 
-bool strcmp(const char *restrict x, const char *restrict y); 
-bool strncmp(const char *restrict x, const char *restrict y, size_t count); 
-size_t strlen(const char *restrict s);
+bool strcmp(const char *x, const char *y); 
+bool strncmp(const char *x, const char *y, size_t count); 
+size_t strlen(const char *s);
 
-void utoa(u64 n, char *restrict buffer, u8 base);
-void itoa(u64 n, char *restrict buffer);
-void ztoa(size_t n, char *restrict buffer, u8 unit);
+void utoa(u64 n, char *buffer, u8 base);
+void itoa(u64 n, char *buffer);
+void ztoa(size_t n, char *buffer, u8 unit);
 
 //TODO: String to value
 //TODO: Strerror

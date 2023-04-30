@@ -12,6 +12,7 @@
 #define VFS_MODE_CREATE 0x0008
 
 typedef u64 fid_t;
+#define FID_INVALID ((fid_t)-1)
 
 struct vfs_filePath {
   char *part;
@@ -27,7 +28,7 @@ struct vfs_file {
   struct vfs_file *prev, *next;
 };
 
-fid_t vfs_open(const char *restrict path, u16 mode);
+fid_t vfs_open(const char *path, u16 mode);
 size_t vfs_read(fid_t fid, void *buffer, size_t count);
 size_t vfs_write(fid_t fid, void *buffer, size_t count);
 

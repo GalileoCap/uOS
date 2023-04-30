@@ -35,11 +35,11 @@ void* nodeData(struct heapNode_t *node) {
 }
 
 size_t nodeSize(struct heapNode_t *node) {
-  return (void*)(node->next) - nodeData(node);
+  return (size_t)node->next - (size_t)nodeData(node);
 }
 
 struct heapNode_t* nodeFromData(void *ptr) {
-  return ptr - offsetof(struct heapNode_t, data);
+  return (struct heapNode_t*)(ptr - offsetof(struct heapNode_t, data));
 }
 
 void expandHeap(size_t bytes) {
@@ -88,7 +88,7 @@ struct heapNode_t* getFirstFreeOfSize(size_t bytes) {
   }
 
   if (nodeSize(node) > (bytes + sizeof(struct heapNode_t) + HEAP_ALIGN)) { // Split if large enough
-    struct heapNode_t *newNode = nodeData(node) + bytes;
+    struct heapNode_t *newNode = (struct heapNode_t*)(nodeData(node) + bytes);
     newNode->prev = node;
     newNode->next = node->next;
     newNode->free = true;
@@ -116,7 +116,7 @@ void* malloc(size_t bytes) {
 
 void* zalloc(size_t bytes) {
   void *res = malloc(bytes);
-  memset(res, 0, bytes);
+  memset((char*)res, 0, bytes);
   return res;
 }
 

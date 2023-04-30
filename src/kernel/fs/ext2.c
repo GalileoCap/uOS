@@ -76,8 +76,8 @@ errno_t ext2_load(struct io_dev *dev) {
     }
   }
 
-  dev->fs = malloc(sizeof(struct ext2_fs));
-  struct ext2_fs *fs = dev->fs;
+  dev->fs = (struct ext2_fs*)malloc(sizeof(struct ext2_fs));
+  struct ext2_fs *fs = (struct ext2_fs*)dev->fs;
   fs->totalInodes = sb.totalInodes;
   fs->totalBlocks = sb.totalBlocks;
   fs->freeInodes = sb.freeInodes;
@@ -103,8 +103,8 @@ errno_t ext2_load(struct io_dev *dev) {
   
   for (u64 i = 0; i < EXT2_CACHE_COUNT; i++)
     fs->cache[i] = (struct ext2_block){
-      .block = -1,
-      .data = malloc(fs->blockSz)
+      .block = (u32)-1,
+      .data = (char*)malloc(fs->blockSz)
     };
   
   printf("[ext2_load] SUCCESFULL name=%s, version=%u.%u id=%X%X\n", fs->name, fs->major, fs->minor, fs->id[0], fs->id[1]);
@@ -118,7 +118,7 @@ errno_t ext2_writeBlocks(void *buffer, u32 from, u32 count, bool cache, bool flu
   printf("[ext2_writeBlocks] %u %u %c\n", from, count, cache ? 'T' : 'F');
   //TODO: Check valid block
 
-  struct ext2_fs *fs = dev->fs;
+  struct ext2_fs *fs = (struct ext2_fs*)dev->fs;
 
   for (u32 block = from; block < (from + count); block++) {
     //A: Search for this block or a free cache
@@ -127,14 +127,14 @@ errno_t ext2_writeBlocks(void *buffer, u32 from, u32 count, bool cache, bool flu
       if (fs->cache[i].block == block) idx = i;
       else if (fs->cache[i].block == -1) lastFree = i;
 
-    if (idx != -1) memcpy(buffer, fs->cache[idx].data, fs->blockSz); //A: In cache, simply copy
+    if (idx != -1) memcpy((char*)buffer, (char*)fs->cache[idx].data, fs->blockSz); //A: In cache, simply copy
     else { //A: Not in cache, get it
       if (cache) { //A: Save to cache
         if (lastFree == -1) lastFree = 0; //TODO: Replacement scheme
         idx = lastFree;
 
         fs->cache[idx].block = block;
-        memcpy(buffer, fs->cache[idx].data, fs->blockSz);
+        memcpy((char*)buffer, (char*)fs->cache[idx].data, fs->blockSz);
       } else dev->write(buffer, fs->blockSz, block2Sector(block, fs->blockSz), dev); //A: Don't save to cache //TODO: Error
     }
 
@@ -151,7 +151,7 @@ errno_t ext2_readBlocks(void *buffer, u32 from, u32 count, bool cache, struct io
   //TODO: Check valid block
   //TODO: Repeated code
 
-  struct ext2_fs *fs = dev->fs;
+  struct ext2_fs *fs = (struct ext2_fs*)dev->fs;
 
   for (u32 block = from; block < (from + count); block++) {
     //A: Search for this block or a free cache
@@ -162,7 +162,7 @@ errno_t ext2_readBlocks(void *buffer, u32 from, u32 count, bool cache, struct io
 
     if (idx != -1) {
       /*printf("[ext2_readBlocks] in cache, idx=%X, data=%p\n", idx, fs->cache[idx].data);*/
-      memcpy(fs->cache[idx].data, buffer, fs->blockSz); //A: In cache, simply copy
+      memcpy((char*)fs->cache[idx].data, (char*)buffer, fs->blockSz); //A: In cache, simply copy
     } else { //A: Not in cache, get it
       if (cache) { //A: Save to cache
         if (lastFree == -1) lastFree = 0; //TODO: Replacement scheme
@@ -170,7 +170,7 @@ errno_t ext2_readBlocks(void *buffer, u32 from, u32 count, bool cache, struct io
 
         fs->cache[idx].block = block;
         dev->read(fs->cache[idx].data, fs->blockSz, block2Sector(block, fs->blockSz), dev); //TODO: Error
-        memcpy(fs->cache[idx].data, buffer, fs->blockSz);
+        memcpy((char*)fs->cache[idx].data, (char*)buffer, fs->blockSz);
       } else dev->read(buffer, fs->blockSz, block2Sector(block, fs->blockSz), dev); //A: Don't save to cache //TODO: Error
     }
 
@@ -181,8 +181,8 @@ errno_t ext2_readBlocks(void *buffer, u32 from, u32 count, bool cache, struct io
 }
 
 bool ext2_find(struct vfs_file *file, struct ext2_inode *inode, struct io_dev *dev) {
-  struct ext2_fs *fs = dev->fs;
-  struct ext2_blockGroup *bg = malloc(fs->blockSz); //TODO: Sizeof
+  struct ext2_fs *fs = (struct ext2_fs*)dev->fs;
+  struct ext2_blockGroup *bg = (struct ext2_blockGroup*)malloc(fs->blockSz); //TODO: Sizeof
   void *table = calloc(fs->iPerBG, fs->inodeSz);
   void *dir = malloc(fs->blockSz);
   
@@ -204,7 +204,7 @@ bool ext2_find(struct vfs_file *file, struct ext2_inode *inode, struct io_dev *d
         if (ext2_readInodeBlock(inode, dir, i, false, dev) != EOK)
           goto end;
 
-        entry = ext2_GetDir(dir, path->part);
+        entry = ext2_GetDir((struct ext2_dir*)dir, path->part);
       }
 
       if (entry == NULL)
@@ -231,13 +231,13 @@ u32 ext2_getInodeBlock(struct ext2_inode *inode, u32 block, struct io_dev *dev) 
   block -= 12;
 
   //A: Indirect
-  struct ext2_fs *fs = dev->fs;
+  struct ext2_fs *fs = (struct ext2_fs*)dev->fs;
   u64 pointersPerBlock = fs->blockSz / sizeof(u32),
       ptrsPerSingly = pointersPerBlock,
       ptrsPerDoubly = pow(pointersPerBlock, 2),
       ptrsPerTriply = pow(pointersPerBlock, 3);
 
-  u32 *indirect = malloc(fs->blockSz);
+  u32 *indirect = (u32*)malloc(fs->blockSz);
   u32 blockNum;
 
   if (block < ptrsPerSingly) { //A: Singly indirect
@@ -278,12 +278,12 @@ errno_t ext2_expandInode(struct ext2_inode *inode, u32 blocks, bool cache, struc
   //TODO: Repeated code with ext2_find
   errno = EOK;
 
-  struct ext2_fs *fs = dev->fs;
+  struct ext2_fs *fs = (struct ext2_fs*)dev->fs;
   //TODO: Check enough blocks in fs
   u32 firstBGBlock = (fs->blockSz == 1024 ? 2 : 1); //TODO
-  struct ext2_blockGroup *bg = malloc(fs->blockSz); //TODO: Sizeof //TODO: Find empty bg
+  struct ext2_blockGroup *bg = (struct ext2_blockGroup*)malloc(fs->blockSz); //TODO: Sizeof //TODO: Find empty bg
   ext2_readBlocks(bg, firstBGBlock, 1, true, dev);
-  u64 *blockBm = malloc(fs->blockSz);
+  u64 *blockBm = (u64*)malloc(fs->blockSz);
   ext2_readBlocks(blockBm, bg->bUsageBM, 1, true, dev);
 
   u32 startIdx = CEIL(inode->i_blocks * ATA_SECTOR_SIZE, fs->blockSz);
@@ -303,7 +303,7 @@ end:
 
 errno_t ext2_writeInodeBlock(struct ext2_inode *inode, void *buffer, u32 block, bool cache, struct io_dev *dev) {
   printf("[ext2_writeInodeBlock] block=%X cache=%c\n", block, cache ? 'T' : 'F');
-  struct ext2_fs *fs = dev->fs;
+  struct ext2_fs *fs = (struct ext2_fs*)dev->fs;
 
   if (CEIL(inode->i_blocks * ATA_SECTOR_SIZE, fs->blockSz) == block)
     if (ext2_expandInode(inode, 1, false, dev) != EOK) return_errno(errno); //TODO: Predict and expand more at once
@@ -315,7 +315,7 @@ errno_t ext2_writeInodeBlock(struct ext2_inode *inode, void *buffer, u32 block, 
 
 errno_t ext2_readInodeBlock(struct ext2_inode *inode, void *buffer, u32 block, bool cache, struct io_dev *dev) {
   //TODO: Repeated code
-  struct ext2_fs *fs = dev->fs;
+  struct ext2_fs *fs = (struct ext2_fs*)dev->fs;
   if (CEIL(inode->i_blocks * ATA_SECTOR_SIZE, fs->blockSz) < block) return_errno(ENODEV); //A: Trying to read outside of file //TODO: Better error //TODO: Variable sector sz?
   u32 blockNum = ext2_getInodeBlock(inode, block, dev);
   return ext2_readBlocks(buffer, blockNum, 1, cache, dev); 
@@ -329,7 +329,7 @@ size_t ext2_RWInode(struct ext2_inode *inode, void *buffer, size_t count, size_t
     (write && inode->i_size < offset) //A: Trying to write outside of file
   ) { errno = ENODEV; return 0; } //TODO: Better error
 
-  struct ext2_fs *fs = dev->fs;
+  struct ext2_fs *fs = (struct ext2_fs*)dev->fs;
   void *_buffer = malloc(fs->blockSz);
   size_t total = 0;
 
@@ -342,11 +342,11 @@ size_t ext2_RWInode(struct ext2_inode *inode, void *buffer, size_t count, size_t
       if (offset != 0) { //A: Read block to avoid rewriting
         if (ext2_readInodeBlock(inode, _buffer, block, false, dev) != EOK) goto end; //TODO: Cache and then flush and remove if we don't want cache
       }
-      memcpy(buffer, _buffer + offset, _count);
+      memcpy((char*)buffer, (char*)(_buffer + offset), _count);
       if (ext2_writeInodeBlock(inode, _buffer, block, false, dev) != EOK) goto end; //TODO: Cache?
     } else { //A: Read
       if (ext2_readInodeBlock(inode, _buffer, block, false, dev) != EOK) goto end; //TODO: Cache?
-      memcpy(_buffer + offset, buffer, _count);
+      memcpy((char*)(_buffer + offset), (char*)buffer, _count);
     }
 
     offset = 0;

@@ -52,7 +52,7 @@ u16 ata_poll(u16 port) {
 //READ: https://wiki.osdev.org/ATA_PIO_Mode#IDENTIFY_command
 //READ: https://wiki.osdev.org/PCI_IDE_Controller#Detecting_a_PCI_IDE_Controller
 errno_t ata_load(struct io_dev *dev) {
-  struct ata_info *info = dev->info;
+  struct ata_info *info = (struct ata_info*)dev->info;
   u16 port = info->port;
   u8 slave = info->slave;
   /*printf("[ata_load] dev=%u, port=%x, master=%x\n", dev->id, port, slave);*/
@@ -98,8 +98,10 @@ errno_t ata_load(struct io_dev *dev) {
   info->feats = identify.capabilities;
   info->commandSets = identify.command_sets;
   info->size = ATA_SECTOR_SIZE * (((info->commandSets & (1 << 26)) != 0) ? identify.max_lba_ext : identify.max_lba);
-  for (u64 k = 0; k < 40; k++) info->model[k] = identify.model[k]; info->model[40] = '\0'; //TODO: Model is reading weird
-  info->buffer = malloc(ATA_SECTOR_SIZE);
+  for (u64 k = 0; k < 40; k++)
+    info->model[k] = identify.model[k];
+  info->model[40] = '\0'; //TODO: Model is reading weird
+  info->buffer = (u32*)malloc(ATA_SECTOR_SIZE);
 
   printf("[ata_load] Detected:\n");
   printf("\t* id=%u, port=%u, slave=%u, type=%s\n", dev->id, info->port, info->slave, IDE_MSG[info->type]);
@@ -162,9 +164,9 @@ size_t ata_readWrite(void *buffer, u32 lba, size_t count, struct io_dev *dev, bo
     size_t _count = MIN(count, ATA_SECTOR_SIZE);
     u16 n = 1;//CEIL(_count, ATA_SECTOR_SIZE); //TODO
 
-    if (write) memcpy(buffer, devBuffer, _count);
+    if (write) memcpy((char*)buffer, (char*)devBuffer, _count);
     if (ata_readWrite_(dev, lba++, n, write) != EOK) return res;
-    if (!write) memcpy(devBuffer, buffer, _count);
+    if (!write) memcpy((char*)devBuffer, (char*)buffer, _count);
 
     count -= _count;
     buffer += _count;
@@ -191,7 +193,7 @@ u64 ata_init(void) {
 
   u64 count = 0;
   for (u8 i = 0; i < 4; i++) {
-    struct ata_info *info = malloc(sizeof(struct ata_info));
+    struct ata_info *info = (struct ata_info*)malloc(sizeof(struct ata_info));
     *info = (struct ata_info){
       .port = i < 2 ? ATA0 : ATA1,
       .slave = (i % 2 == 0) ? ATA_MASTER : ATA_SLAVE,

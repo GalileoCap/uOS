@@ -26,7 +26,7 @@ build_target() {
   mkdir build
   cd build
 
-  ../$GCCSRC/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c --without-headers
+  ../$GCCSRC/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers
   make all-gcc
   make all-target-libgcc
   make install-gcc
