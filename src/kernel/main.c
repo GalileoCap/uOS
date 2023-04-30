@@ -1,6 +1,7 @@
 #include <serial.h>
 #include <mmu.h>
 #include <idt.h>
+#include <ata.h>
 #include <utils.h>
 
 //U: Define global variables //NOTE: Their values get set somewhere else
@@ -25,6 +26,9 @@ void kmain(void *mbd, bool magicError) {
 
   if (idt_init() != EOK) 
     panic("[kmain] IDT failed errno=%X\n", errno);
+
+  if (ata_init() != EOK) 
+    panic("[kmain] ATA failed errno=%X\n", errno);
 
   printf("[kmain] REACHED END\n");
   printf("[you] ");

@@ -244,6 +244,7 @@ def TaskDisk():
   return {
     'deps': [],
     'outs': [DISK],
+    'skipRun': True,
 
     'actions': [
       f'dd if=/dev/zero of={DISK} bs={DISKUNIT} count={DISKSZ}',

@@ -12,6 +12,11 @@ void memset(char *at, char value, size_t count) {
     at[i] = value;
 }
 
+void memcpy(char *from, char *to, size_t count) {
+  for (size_t i = 0; i < count; i++)
+    to[i] = from[i];
+}
+
 /************************************************************/
 /* S: Malloc ************************************************/
 
