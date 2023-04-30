@@ -239,6 +239,20 @@ menuentry "uOS" {
 #************************************************************
 #* S: Disk **************************************************
 
+def TaskPopulateDisk():
+  mountd = f'{BUILDD}/mnt2'
+
+  return {
+    'deps': [DISK],
+    'skipRun': True,
+
+    'actions': [
+      f'sudo mount --mkdir {DISK} {mountd}', # TODO: MOUNTD
+      f'sudo echo "Ahoy there!" | sudo tee -a {mountd}/README.md', # TODO: MOUNTD
+      f'sudo umount {DISK}',
+    ],
+  }
+
 def TaskDisk():
   #TODO: Populate
   return {

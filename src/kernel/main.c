@@ -2,6 +2,7 @@
 #include <mmu.h>
 #include <idt.h>
 #include <ata.h>
+#include <vfs.h>
 #include <utils.h>
 
 //U: Define global variables //NOTE: Their values get set somewhere else
@@ -29,6 +30,17 @@ void kmain(void *mbd, bool magicError) {
 
   if (ata_init() != EOK) 
     panic("[kmain] ATA failed errno=%X\n", errno);
+
+  fid_t fid = vfs_open("/dev0/README.md", VFS_MODE_READ | VFS_MODE_WRITE);
+  if (fid == -1) panic("[kmain] VFS_OPEN failed errno=%X\n", errno);
+  
+  char msg[12] = {'\0'};
+  size_t count = vfs_read(fid, msg, sizeof(msg)-1);
+  printf("[kmain] read %z with msg: \"%s\"\n", count, msg);
+
+  /*char msg[] = "Ahoy there!";*/
+  /*size_t count = vfs_read(fid, msg, sizeof(msg));*/
+  /*printf("[kmain] wrote %z\n", count);*/
 
   printf("[kmain] REACHED END\n");
   printf("[you] ");

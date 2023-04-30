@@ -119,6 +119,7 @@ void* calloc(size_t n, size_t bytes) {
 }
 
 void free(void *ptr) {
+  return; // TODO: Fix
   struct heapNode_t *node = nodeFromData(ptr);
   /*printf("[free] %p %p %z\n", ptr, node, sizeof(struct heapNode_t));*/
   node->free = true;

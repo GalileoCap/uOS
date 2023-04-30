@@ -7,6 +7,7 @@
 #include <defines.h>
 #include <memory.h>
 #include <string.h>
+#include <math.h>
 
 extern paddr_t KSSTART;
 extern paddr_t KSEND;
