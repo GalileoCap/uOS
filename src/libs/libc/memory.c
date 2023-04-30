@@ -114,8 +114,14 @@ void* malloc(size_t bytes) {
   return nodeData(node);
 }
 
+void* zalloc(size_t bytes) {
+  void *res = malloc(bytes);
+  memset(res, 0, bytes);
+  return res;
+}
+
 void* calloc(size_t n, size_t bytes) {
-  return malloc(n * bytes); //TODO: Check for overflows
+  return zalloc(n * bytes); //TODO: Check for overflows
 }
 
 void free(void *ptr) {

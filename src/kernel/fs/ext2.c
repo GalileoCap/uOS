@@ -2,6 +2,8 @@
 #include <string.h>
 #include <vfs.h>
 
+errno_t ext2_readInodeBlock(struct ext2_inode *inode, void *buffer, u32 block, bool cache, struct io_dev *dev);
+
 u64 block2Sector(u64 block, u64 blockSz) {
   return (block * blockSz) / ATA_SECTOR_SIZE;
 }
@@ -180,24 +182,48 @@ errno_t ext2_readBlocks(void *buffer, u32 from, u32 count, bool cache, struct io
 
 bool ext2_find(struct vfs_file *file, struct ext2_inode *inode, struct io_dev *dev) {
   struct ext2_fs *fs = dev->fs;
-  u32 firstBGBlock = (fs->blockSz == 1024 ? 2 : 1); //TODO
   struct ext2_blockGroup *bg = malloc(fs->blockSz); //TODO: Sizeof
-  ext2_readBlocks(bg, firstBGBlock, 1, true, dev);
   void *table = calloc(fs->iPerBG, fs->inodeSz);
+  void *dir = malloc(fs->blockSz);
+  
+  u32 firstBGBlock = (fs->blockSz == 1024 ? 2 : 1); //TODO
+  ext2_readBlocks(bg, firstBGBlock, 1, true, dev);
+
   ext2_readBlocks(table, bg->table, fs->iPerBG * fs->inodeSz / fs->blockSz, true, dev);
   *inode = *((struct ext2_inode*)(table + fs->inodeSz * inode2IDX(EXT2_ROOT_INODE, fs)));
 
-  void *dir = malloc(fs->blockSz);
-  ext2_readBlocks(dir, inode->i_block[0], 1, true, dev);
-  struct ext2_dir *entry = ext2_GetDir(dir, "README.md");
-  ext2_readBlocks(bg, firstBGBlock, 1, true, dev); //TODO: BG
-  ext2_readBlocks(table, bg->table, fs->iPerBG * fs->inodeSz / fs->blockSz, true, dev);
-  *inode = *((struct ext2_inode*)(table + fs->inodeSz * inode2IDX(entry->inode, fs)));
+  //  * Get first BG
+  //  * Get root inode
+  struct vfs_filePath *path = file->path;
+  while (path->next != NULL) {
+    path = path->next; // NOTE: Assumes not targeting /devX
 
-  //TODO: Follow path
+    if (FLAGS_SET(inode->i_mode, EXT2_TYPE_DIR)) {
+      struct ext2_dir *entry = NULL; 
+      for (u32 i = 0; entry == NULL && i < (inode->i_blocks / 2); i++) { //TODO: i < inode->i_blocks
+        if (ext2_readInodeBlock(inode, dir, i, false, dev) != EOK)
+          goto end;
 
+        entry = ext2_GetDir(dir, path->part);
+      }
+
+      if (entry == NULL)
+        panic("[ext2_find] entry == NULL\n"); //TODO: Handle
+
+      //TODO: Replace bg and table with this new inode's
+      *inode = *((struct ext2_inode*)(table + fs->inodeSz * inode2IDX(entry->inode, fs)));
+
+    } else if (FLAGS_SET(inode->i_mode, EXT2_TYPE_FILE)) {
+    } else if (FLAGS_SET(inode->i_mode, EXT2_TYPE_SYML)) {
+      panic("[ext2_find] inode is SYML\n"); //TODO: Handle
+    } else {
+      panic("[ext2_find] inode mode unhanlded: %X\n", inode->i_mode); //TODO: Handle
+    }
+  }
+
+end:
   free(bg); free(table); free(dir);
-  return true;
+  return path->next == NULL;
 }
 
 u32 ext2_getInodeBlock(struct ext2_inode *inode, u32 block, struct io_dev *dev) {
@@ -335,7 +361,7 @@ end:
 }
 
 size_t ext2_RW(struct vfs_file *file, void *buffer, size_t count, bool write, struct io_dev *dev) {
-  printf("[ext2_RW] MODE=%s, file={path=%s, offset=%z, mode=%X}, count=%z, dev=%X\n", write ? "write" : "read", file->path, file->offset, file->mode, count, dev->id);
+  printf("[ext2_RW] MODE=%s, file={path=%s, offset=%z, mode=%X}, count=%z, dev=%X\n", write ? "write" : "read", file->path->next->part, file->offset, file->mode, count, dev->id); //TODO: full file path
   struct ext2_inode inode;
 
   if (ext2_find(file, &inode, dev)) {

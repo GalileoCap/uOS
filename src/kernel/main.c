@@ -31,7 +31,8 @@ void kmain(void *mbd, bool magicError) {
   if (ata_init() != EOK) 
     panic("[kmain] ATA failed errno=%X\n", errno);
 
-  fid_t fid = vfs_open("/dev0/README.md", VFS_MODE_READ | VFS_MODE_WRITE);
+  /*fid_t fid = vfs_open("/dev0/README.md", VFS_MODE_READ | VFS_MODE_WRITE);*/
+  fid_t fid = vfs_open("/dev0/subdir/test", VFS_MODE_READ | VFS_MODE_WRITE);
   if (fid == -1) panic("[kmain] VFS_OPEN failed errno=%X\n", errno);
   
   char msg[12] = {'\0'};

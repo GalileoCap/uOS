@@ -9,6 +9,7 @@ void memset(char *at, char value, size_t count);
 void memcpy(char *from, char *to, size_t count);
 
 void* malloc(size_t bytes);
+void* zalloc(size_t bytes);
 void* calloc(size_t n, size_t bytes);
 //void* realloc(void *ptr, size_t newBytes); //TODO
 

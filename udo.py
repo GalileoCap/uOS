@@ -249,6 +249,8 @@ def TaskPopulateDisk():
     'actions': [
       f'sudo mount --mkdir {DISK} {mountd}', # TODO: MOUNTD
       f'sudo echo "Ahoy there!" | sudo tee -a {mountd}/README.md', # TODO: MOUNTD
+      f'sudo mkdir {mountd}/subdir',
+      f'sudo echo "My friend!!" | sudo tee -a {mountd}/subdir/test', # TODO: MOUNTD
       f'sudo umount {DISK}',
     ],
   }

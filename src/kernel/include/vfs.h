@@ -13,9 +13,14 @@
 
 typedef u64 fid_t;
 
+struct vfs_filePath {
+  char *part;
+  struct vfs_filePath *next;
+};
+
 struct vfs_file {
   fid_t fid;
-  char *path;
+  struct vfs_filePath *path;
   size_t offset;
   u16 mode;
 
