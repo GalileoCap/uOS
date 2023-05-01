@@ -12,6 +12,8 @@ def foo(op0, op1, op2, op3, kernel, libc):
 def getExtension(fpath):
   if fpath[-2:] == '.c': # C-file
     return fpath[:-2], '.c', '.o'
+  elif fpath[-3:] == '.cc': # C++-file
+    return fpath[:-3], '.cc', '.o'
   elif fpath[-4:] == '.asm':
     return fpath[:-4], '.asm', '_asm.o'
 
@@ -27,7 +29,7 @@ def compileCommand(fpath, *, kernel = False, libc = False):
   cflags = foo(CFLAGS, KCFLAGS, LIBCCFLAGS, LIBKCFLAGS, kernel, libc)
   asmflags = foo(ASMFLAGS, KASMFLAGS, LIBCASMFLAGS, LIBCASMFLAGS, kernel, libc)
 
-  if extension == '.c':
+  if extension in ['.c', '.cc']:
   	return f'{CC} {cflags} -c {fpath} -o {opath}'
   elif extension == '.asm':
     return f'{ASM} {asmflags} {fpath} -o {opath}'
@@ -95,6 +97,7 @@ ARFLAGS = ' -rcs'
 KCFLAGS = (
   CFLAGS
   + ' -ffreestanding -static'
+  + ' -fno-rtti -fno-exceptions'
   + f' -DKERNEL -I./{KERNELD}/include'
   + ' -ekmain'
 )
@@ -106,7 +109,7 @@ KLDFLAGS = (
 )
 KSOURCES = [
   str(fpath)
-  for fpath in list(Path(KERNELD).rglob('*.c')) + list(Path(KERNELD).rglob('*.asm'))
+  for fpath in list(Path(KERNELD).rglob('*.c')) + list(Path(KERNELD).rglob('*.cc')) + list(Path(KERNELD).rglob('*.asm'))
 ]
 KOBJS = [
   getOpath(fpath, kernel = True)

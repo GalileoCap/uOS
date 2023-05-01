@@ -3,7 +3,13 @@
 #include <idt.h>
 #include <ata.h>
 #include <vfs.h>
+#include <test.h>
 #include <utils.h>
+
+void* operator new(size_t size) { return zalloc(size); }
+void* operator new[](size_t size) { return zalloc(size); }
+void operator delete(void *ptr) { return free(ptr); }
+void operator delete[](void *ptr) { return free(ptr); }
 
 //U: Define global variables //NOTE: Their values get set somewhere else
 paddr_t KSSTART;
@@ -43,6 +49,14 @@ void kmain(void *mbd, bool magicError) {
   /*char msg[] = "Ahoy there!";*/
   /*size_t count = vfs_read(fid, msg, sizeof(msg));*/
   /*printf("[kmain] wrote %z\n", count);*/
+
+  printf("[kmain] %X\n", std::FOOTEST);
+
+  //std::Test<u64> t(0x600DB007);
+  std::Test<u64> *t = new std::Test<u64>(0x600DB007);
+  printf("[kmain] %X\n", t->getValue());
+  t->setValue(0x600DF337);
+  printf("[kmain] %X\n", t->getValue());
 
   printf("[kmain] REACHED END\n");
   printf("[you] ");
