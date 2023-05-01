@@ -50,6 +50,7 @@ def compileTask(fpath, *, kernel = False, libc = False):
 COMPD = './compiler'
 BUILDD = './build'
 MOUNTD = f'{BUILDD}/mnt'
+os.makedirs(BUILDD, exist_ok = True)
 
 KERNELD = './src/kernel'
 LIBSD = './src/libs'
@@ -154,7 +155,7 @@ def TaskKernel():
 
 def TaskLinkKernel():
   return {
-    'deps': KOBJS + [f'{BUILDD}/libk.a', TaskCompiler],
+    'deps': KOBJS + [f'{BUILDD}/libk.a', TaskCompiler, TaskGrub],
     'outs': [BIN, MAP],
 
     'actions': [
