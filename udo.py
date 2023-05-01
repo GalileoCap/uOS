@@ -257,6 +257,8 @@ def TaskPopulateDisk():
 
     'actions': [
       f'sudo mount --mkdir {DISK} {mountd}', # TODO: MOUNTD
+      f'sudo find {mountd}/* ! -name \'lost+found\' -exec rm -rf ' + '{} +',
+
       f'sudo echo "Ahoy there!" | sudo tee -a {mountd}/README.md', # TODO: MOUNTD
       f'sudo mkdir {mountd}/subdir',
       f'sudo echo "My friend!!" | sudo tee -a {mountd}/subdir/test', # TODO: MOUNTD
@@ -269,6 +271,7 @@ def TaskDisk():
   return {
     'outs': [DISK],
     'skipRun': lambda: os.path.isfile(DISK),
+    'clean': lambda: os.path.isfile(DISK) and input('Delete disk image? [y/N] ') in ['y', 'yes'] and os.remove(DISK),
 
     'actions': [
       f'dd if=/dev/zero of={DISK} bs={DISKUNIT} count={DISKSZ}',
