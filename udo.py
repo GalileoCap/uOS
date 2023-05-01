@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 #************************************************************
@@ -249,7 +250,10 @@ def TaskPopulateDisk():
 
   return {
     'deps': [DISK],
-    'skipRun': True,
+    'skipRun': lambda: (
+      not os.path.isfile(DISK) or
+      input('Populate disk? [y/N] ').lower() not in ['y', 'yes']
+    ),
 
     'actions': [
       f'sudo mount --mkdir {DISK} {mountd}', # TODO: MOUNTD
@@ -263,9 +267,8 @@ def TaskPopulateDisk():
 def TaskDisk():
   #TODO: Populate
   return {
-    'deps': [],
     'outs': [DISK],
-    'skipRun': True,
+    'skipRun': lambda: os.path.isfile(DISK),
 
     'actions': [
       f'dd if=/dev/zero of={DISK} bs={DISKUNIT} count={DISKSZ}',
@@ -279,7 +282,7 @@ def TaskDisk():
 def TaskCompiler():
   return {
     'deps': ['./compiler.sh'],
-    'outs': ['./compiler'],
+    'outs': [COMPD],
     'clean': False,
     'actions': ['./compiler.sh'],
   }
