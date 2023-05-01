@@ -4,44 +4,55 @@ from pathlib import Path
 #************************************************************
 #* S: Utils *************************************************
 
-def foo(op0, op1, op2, op3, kernel, libc):
-  if kernel and libc: return op3
-  elif kernel: return op1
-  elif libc: return op2
-  else: return op0
+def filesWithExtension(d, extension):
+  return [ str(fpath) for fpath in list(Path(d).rglob(f'*{extension}')) ]
 
 def getExtension(fpath):
   if fpath[-2:] == '.c': # C-file
     return fpath[:-2], '.c', '.o'
   elif fpath[-3:] == '.cc': # C++-file
     return fpath[:-3], '.cc', '.o'
-  elif fpath[-4:] == '.asm':
+  elif fpath[-4:] == '.ipp': # Template C++ file
+    return fpath[:-4], '.ipp', '_ipp.o'
+  elif fpath[-4:] == '.asm': # Asm file
     return fpath[:-4], '.asm', '_asm.o'
 
-def getOpath(fpath, *, kernel = False, libc = False):
+def getOpath(fpath, target):
   noExtension, _, newExtension = getExtension(fpath)
-  middle = foo('', '', '_libc_', '_libk_', kernel, libc)
+  middle = f'_{target}_' if target in ['libc', 'libk'] else ''
   return noExtension + middle + newExtension
 
-def compileCommand(fpath, *, kernel = False, libc = False):
-  noExtension, extension, newExtension = getExtension(fpath)
-  opath = getOpath(fpath, kernel = kernel, libc = libc)
+def getCFlags(target):
+  if target == 'kernel': return KCFLAGS
+  elif target == 'libc': return LIBCCFLAGS
+  elif target == 'libk': return LIBKCFLAGS
+  elif target == 'stdlib': return CFLAGS
+  else: return CFLAGS
 
-  cflags = foo(CFLAGS, KCFLAGS, LIBCCFLAGS, LIBKCFLAGS, kernel, libc)
-  asmflags = foo(ASMFLAGS, KASMFLAGS, LIBCASMFLAGS, LIBCASMFLAGS, kernel, libc)
+def getAsmFlags(target):
+  if target == 'kernel': return KASMFLAGS
+  elif target in ['libc', 'libk', 'stdlib']: return LIBCASMFLAGS
+  else: return ASMFLAGS
+
+def compileCommand(fpath, target):
+  noExtension, extension, newExtension = getExtension(fpath)
+  opath = getOpath(fpath, target)
+
+  cflags = getCFlags(target)
+  asmflags = getAsmFlags(target)
 
   if extension in ['.c', '.cc']:
   	return f'{CC} {cflags} -c {fpath} -o {opath}'
   elif extension == '.asm':
     return f'{ASM} {asmflags} {fpath} -o {opath}'
 
-def compileTask(fpath, *, kernel = False, libc = False):
+def compileTask(fpath, target):
   return {
     'name': fpath,
-    'deps': [TaskCompiler, fpath], #TODO: Also depend on header
-    'outs': [getOpath(fpath, kernel = kernel, libc = libc)],
+    'deps': [TaskCompiler, fpath] + IPPSOURCES, #TODO: Also depend on header #TODO: Don't depend on all ipp's
+    'outs': [getOpath(fpath, target)],
 
-    'actions': [compileCommand(fpath, kernel = kernel, libc = libc)],
+    'actions': [compileCommand(fpath, target)],
   }
 
 #************************************************************
@@ -56,12 +67,16 @@ KERNELD = './src/kernel'
 LIBSD = './src/libs'
 APPSD = './src/apps'
 LIBCD = f'{LIBSD}/libc'
+STDLIBD = f'{LIBSD}/stdlib'
 
 BIN = f'{MOUNTD}/boot/galilos.bin'
 ISO = f'{BUILDD}/galilos.iso'
 MAP = f'{BUILDD}/galilos.map'
 DUMP = f'{BUILDD}/galilos.dump'
 GRUBCFG = f'{MOUNTD}/boot/grub/grub.cfg'
+
+LIBCA = f'{BUILDD}/libc.a'
+LIBKA = f'{BUILDD}/libk.a'
 
 DISK = f'{BUILDD}/hdd.img'
 DISKUNIT = 1024**2
@@ -79,7 +94,8 @@ CFLAGS = (
   + ' -w' # + ' -Wall' #TODO: Re-enable warnings
   + ' -nostartfiles -nostdlib'
   + ' -masm=intel'
-  + f' -I{LIBSD}/libc/include'
+  + f' -I{LIBCD}/include'
+  + f' -I{STDLIBD}/include'
   + OFLAGS
 )
 
@@ -109,38 +125,27 @@ KLDFLAGS = (
   + ' -static -nostdlib'
   + f' -T./{KERNELD}/linker.ld -Map={MAP}'
 )
-KSOURCES = [
-  str(fpath)
-  for fpath in list(Path(KERNELD).rglob('*.c')) + list(Path(KERNELD).rglob('*.cc')) + list(Path(KERNELD).rglob('*.asm'))
-]
+KSOURCES = filesWithExtension(KERNELD, '.c') + filesWithExtension(KERNELD, '.cc') + filesWithExtension(KERNELD, '.asm')
 KOBJS = [
-  getOpath(fpath, kernel = True)
+  getOpath(fpath, 'kernel')
   for fpath in KSOURCES
 ]
 
 LIBCCFLAGS = (
   CFLAGS
-  + f' -I{LIBCD}/include'
   + ' -pie -fPIE -fPIC -DUSER'
 )
 LIBKCFLAGS = (
   CFLAGS
-  + f' -I{LIBCD}/include'
   + f' -DKERNEL -I./{KERNELD}/include'
 )
 LIBCASMFLAGS = ASMFLAGS + f' -i {LIBCD}/include'
-LIBCSOURCES = [
-  str(fpath)
-  for fpath in list(Path(LIBCD).rglob('*.c')) + list(Path(LIBCD).rglob('*.asm')) #TODO: Repeated code
-]
-LIBCOBJS = [
-  getOpath(fpath, libc = True)
-  for fpath in LIBCSOURCES
-]
-LIBKOBJS = [
-  getOpath(fpath, kernel = True, libc = True)
-  for fpath in LIBCSOURCES
-]
+LIBCSOURCES = filesWithExtension(LIBCD, '.c') + filesWithExtension(LIBCD, '.asm')
+LIBCOBJS = [ getOpath(fpath, 'libc') for fpath in LIBCSOURCES ]
+LIBKOBJS = [ getOpath(fpath, 'libk') for fpath in LIBCSOURCES ]
+
+STDLIBSOURCES = filesWithExtension(STDLIBD, '.c') + filesWithExtension(STDLIBD, '.asm')
+IPPSOURCES = filesWithExtension(STDLIBD, '.ipp')
 
 #************************************************************
 #* S: Kernel ************************************************
@@ -148,18 +153,18 @@ LIBKOBJS = [
 def TaskKernel():
   return {
     'subtasks': [
-      compileTask(fpath, kernel = True)
+      compileTask(fpath, 'kernel')
       for fpath in KSOURCES
-    ],
+    ]
   }
 
 def TaskLinkKernel():
   return {
-    'deps': KOBJS + [f'{BUILDD}/libk.a', TaskCompiler, TaskGrub],
+    'deps': KOBJS + [LIBKA, TaskCompiler, TaskGrub],
     'outs': [BIN, MAP],
 
     'actions': [
-      f'{LD} {KLDFLAGS} -o {BIN} {" ".join(KOBJS)} {BUILDD}/libk.a',
+      f'{LD} {KLDFLAGS} -o {BIN} {" ".join(KOBJS)} {LIBKA}',
     ],
   }
 
@@ -168,7 +173,9 @@ def TaskDumpKernel():
     'deps': [BIN],
     'outs': [DUMP],
 
-	  'actions': [f'objdump -S --disassemble {BIN} > {DUMP}'],
+	  'actions': [
+      f'objdump -S --disassemble {BIN} > {DUMP}'
+    ],
   }
 
 #************************************************************
@@ -176,33 +183,50 @@ def TaskDumpKernel():
 
 def TaskApps():
   return {
+    'name': 'apps',
   }
 
 #************************************************************
-#* S: Libc **************************************************
+#* S: Libs **************************************************
 
 def TaskLibc():
-  return {
-    'subtasks': [
-      compileTask(fpath, libc = True)
-      for fpath in LIBCSOURCES
-    ] + [archiveLibc()]
-  }
+  return lib('libc')
 
 def TaskLibk():
+  return lib('libk')
+
+def TaskStdlib():
+  return lib('stdlib')
+
+def libSources(lib):
+  if lib in ['libc', 'libk']: return LIBCSOURCES
+  elif lib == 'stdlib': return STDLIBSOURCES
+  else: return []
+
+def libObjs(lib):
+  if lib == 'libc': return LIBCOBJS
+  elif lib == 'libk': return LIBKOBJS
+  elif lib == 'stdlib': return STDLIBSOURCES
+  else: return []
+
+def lib(lib):
+  sources = libSources(lib)
+  objs = libObjs(lib)
+
   return {
+    'name': lib,
+
     'subtasks': [
-      compileTask(fpath, kernel = True, libc = True)
-      for fpath in LIBCSOURCES
-    ] + [archiveLibc(kernel = True)]
+      compileTask(fpath, lib)
+      for fpath in sources
+    ] + [archiveLib(lib, objs)]
   }
 
-def archiveLibc(*, kernel = False):
-  opath = f'{BUILDD}/{"libk.a" if kernel else "libc.a"}'
-  objs = LIBKOBJS if kernel else LIBCOBJS
+def archiveLib(lib, objs):
+  opath = f'{BUILDD}/{lib}.a'
 
   return {
-    'name': 'archiveLibc',
+    'name': 'archiveLib',
     'deps': objs,
     'outs': [opath],
 
@@ -272,7 +296,7 @@ def TaskDisk():
   return {
     'outs': [DISK],
     'skipRun': lambda: os.path.isfile(DISK),
-    'clean': lambda: os.path.isfile(DISK) and input('Delete disk image? [y/N] ') in ['y', 'yes'] and os.remove(DISK),
+    'clean': lambda: os.path.isfile(DISK) and input('Delete disk image? [y/N] ').lower() in ['y', 'yes'] and os.remove(DISK),
 
     'actions': [
       f'dd if=/dev/zero of={DISK} bs={DISKUNIT} count={DISKSZ}',
@@ -288,5 +312,7 @@ def TaskCompiler():
     'deps': ['./compiler.sh'],
     'outs': [COMPD],
     'clean': False,
+    'skipRun': lambda: os.path.isdir(COMPD) or input('Rebuild compiler? This can take a long time [y/N] ').lower() not in ['y', 'yes'],
+
     'actions': ['./compiler.sh'],
   }

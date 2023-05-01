@@ -1,6 +1,8 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
+#include <tmp.h>
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <errno.h>
@@ -9,7 +11,7 @@
 #include <string.h>
 #include <math.h>
 
-#include <list.h>
+#include <list>
 
 extern paddr_t KSSTART;
 extern paddr_t KSEND;
