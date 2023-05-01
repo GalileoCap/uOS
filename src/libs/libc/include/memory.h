@@ -5,6 +5,13 @@
 
 #define HEAP_ALIGN 0x10
 
+void* operator new(size_t size);
+void* operator new[](size_t size); 
+void operator delete(void *ptr);
+void operator delete[](void *ptr); 
+void operator delete(void *ptr, unsigned long s);
+void operator delete[](void *ptr, unsigned long s);
+
 void memset(char *at, char value, size_t count);
 void memcpy(char *from, char *to, size_t count);
 
